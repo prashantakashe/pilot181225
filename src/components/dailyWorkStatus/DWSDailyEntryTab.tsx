@@ -716,6 +716,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
               <Text style={[styles.headerCell, { width: 150 }]}>Project</Text>
               <Text style={[styles.headerCell, { width: 100 }]}>Date & Time</Text>
               <Text style={[styles.headerCell, { width: 250 }]}>Main Activity</Text>
+              <Text style={[styles.headerCell, { width: 120 }]}>Start Date</Text>
               <Text style={[styles.headerCell, { width: 120 }]}>Target Date</Text>
               <Text style={[styles.headerCell, { width: 130 }]}>Assigned To</Text>
               <Text style={[styles.headerCell, { width: 80 }]}>Actions</Text>
@@ -795,6 +796,68 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         );
                       })}
                     </View>
+                  </View>
+                  
+                  {/* Start Date */}
+                  <View style={[styles.cell, { width: 120 }]}>
+                    {Platform.OS === 'web' ? (
+                      <input
+                        type="date"
+                        style={{
+                          width: '100%',
+                          padding: '6px 8px',
+                          border: '1px solid #E5E7EB',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          fontFamily: 'inherit',
+                          cursor: 'pointer'
+                        }}
+                        value={entry.startDate ? (() => {
+                          try {
+                            const date = new Date(entry.startDate);
+                            return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                          } catch {
+                            return '';
+                          }
+                        })() : ''}
+                        onClick={(e: any) => e.stopPropagation()}
+                        onChange={(e: any) => {
+                          e.stopPropagation();
+                          const dateValue = e.target.value;
+                          if (dateValue) {
+                            const date = new Date(dateValue);
+                            handleUpdateEntry(entry.id, 'startDate', date);
+                          } else {
+                            handleUpdateEntry(entry.id, 'startDate', null);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <TextInput
+                        style={styles.cellInput}
+                        placeholder="DD/MM/YYYY"
+                        value={entry.startDate ? (() => {
+                          try {
+                            const date = new Date(entry.startDate);
+                            return !isNaN(date.getTime()) ? date.toLocaleDateString('en-GB') : '';
+                          } catch {
+                            return '';
+                          }
+                        })() : ''}
+                        onChangeText={(text) => {
+                          const parts = text.split('/');
+                          if (parts.length === 3) {
+                            const day = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10) - 1;
+                            const year = parseInt(parts[2], 10);
+                            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                              const date = new Date(year, month, day);
+                              handleUpdateEntry(entry.id, 'startDate', date);
+                            }
+                          }
+                        }}
+                      />
+                    )}
                   </View>
                   
                   {/* Target Date */}
@@ -1105,6 +1168,72 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           );
                         })}
                       </View>
+                    </View>
+                    
+                    {/* Start Date */}
+                    <View style={[styles.cell, { width: 120 }]}>
+                      {Platform.OS === 'web' ? (
+                        <input
+                          type="date"
+                          value={sub.startDate ? (() => {
+                            try {
+                              const date = new Date(sub.startDate);
+                              return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                            } catch {
+                              return '';
+                            }
+                          })() : ''}
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                          }}
+                          onChange={(e: any) => {
+                            const dateValue = e.target.value;
+                            if (dateValue) {
+                              const date = new Date(dateValue);
+                              handleUpdateSubActivity(entry.id, sub.id, 'startDate', date);
+                            } else {
+                              handleUpdateSubActivity(entry.id, sub.id, 'startDate', undefined);
+                            }
+                          }}
+                          onFocus={(e: any) => {
+                            e.stopPropagation();
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            fontSize: '13px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      ) : (
+                        <TextInput
+                          style={styles.cellInput}
+                          placeholder="DD/MM/YYYY"
+                          value={sub.startDate ? (() => {
+                            try {
+                              const date = new Date(sub.startDate);
+                              return !isNaN(date.getTime()) ? date.toLocaleDateString('en-GB') : '';
+                            } catch {
+                              return '';
+                            }
+                          })() : ''}
+                          onChangeText={(text) => {
+                            const parts = text.split('/');
+                            if (parts.length === 3) {
+                              const day = parseInt(parts[0], 10);
+                              const month = parseInt(parts[1], 10) - 1;
+                              const year = parseInt(parts[2], 10);
+                              if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                                const date = new Date(year, month, day);
+                                handleUpdateSubActivity(entry.id, sub.id, 'startDate', date);
+                              }
+                            }
+                          }}
+                        />
+                      )}
                     </View>
                     
                     {/* Target Date */}

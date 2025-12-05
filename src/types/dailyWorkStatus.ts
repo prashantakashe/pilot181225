@@ -53,6 +53,7 @@ export interface DWSSubActivity {
   id: string;
   description: string;
   assignedTo: string;
+  startDate?: Date;
   targetDate?: Date;
   hours: number;
   status: string;
@@ -67,6 +68,7 @@ export interface DWSDailyEntry {
   date: Date;
   dateTime: string;
   mainActivity: string;
+  startDate?: Date;
   targetDate?: Date;
   assignedTo: string;
   hours: number;
