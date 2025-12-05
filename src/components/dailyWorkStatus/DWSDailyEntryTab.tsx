@@ -286,11 +286,23 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
   
   const { isMobile } = useResponsive();
 
-  // Inject tooltip CSS for web
+  // Inject tooltip CSS and sticky header CSS for web
   useEffect(() => {
     if (Platform.OS === 'web') {
       const style = document.createElement('style');
       style.innerHTML = `
+        /* Make table header sticky */
+        .dws-table-scroll {
+          position: relative;
+        }
+        .dws-table-header {
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 100 !important;
+          background-color: #2563EB !important;
+        }
+        
+        /* Tooltip styles */
         [title] {
           position: relative;
           cursor: pointer;
@@ -304,9 +316,9 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
           background-color: rgba(0, 0, 0, 0.85);
           color: white;
           padding: 6px 10px;
-          border-radius: 4px;
+          borderRadius: 4px;
           white-space: nowrap;
-          font-size: 12px;
+          fontSize: 12px;
           z-index: 10000;
           pointer-events: none;
           margin-bottom: 5px;
@@ -708,11 +720,18 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
       </View>
       
       {/* Entries Table */}
-      <ScrollView ref={scrollViewRef} style={styles.tableScroll}>
+      <ScrollView 
+        ref={scrollViewRef} 
+        style={styles.tableScroll}
+        {...(Platform.OS === 'web' ? { className: 'dws-table-scroll' } : {})}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View style={styles.tableContainer}>
             {/* Header */}
-            <View style={styles.tableHeader}>
+            <View 
+              style={styles.tableHeader}
+              {...(Platform.OS === 'web' ? { className: 'dws-table-header' } : {})}
+            >
               <Text style={[styles.headerCell, { width: 150 }]}>Project</Text>
               <Text style={[styles.headerCell, { width: 100 }]}>Date & Time</Text>
               <Text style={[styles.headerCell, { width: 250 }]}>Main Activity</Text>
@@ -755,7 +774,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           padding: '6px 8px',
                           border: '1px solid #E5E7EB',
                           borderRadius: '4px',
-                          fontSize: '13px',
+                          fontSize: '14px',
                           fontFamily: 'inherit',
                           resize: 'vertical'
                         }}
@@ -808,7 +827,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           padding: '6px 8px',
                           border: '1px solid #E5E7EB',
                           borderRadius: '4px',
-                          fontSize: '13px',
+                          fontSize: '14px',
                           fontFamily: 'inherit',
                           cursor: 'pointer'
                         }}
@@ -826,6 +845,18 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           const dateValue = e.target.value;
                           if (dateValue) {
                             const date = new Date(dateValue);
+                            // Validate: if target date exists, start date must be <= target date
+                            if (entry.targetDate) {
+                              const targetDate = new Date(entry.targetDate);
+                              if (date > targetDate) {
+                                if (Platform.OS === 'web') {
+                                  window.alert('Start Date cannot be later than Target Date. Please select an earlier or equal date.');
+                                } else {
+                                  Alert.alert('Invalid Date', 'Start Date cannot be later than Target Date. Please select an earlier or equal date.');
+                                }
+                                return;
+                              }
+                            }
                             handleUpdateEntry(entry.id, 'startDate', date);
                           } else {
                             handleUpdateEntry(entry.id, 'startDate', null);
@@ -870,7 +901,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           padding: '6px 8px',
                           border: '1px solid #E5E7EB',
                           borderRadius: '4px',
-                          fontSize: '13px',
+                          fontSize: '14px',
                           fontFamily: 'inherit',
                           cursor: 'pointer'
                         }}
@@ -888,6 +919,18 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           const dateValue = e.target.value;
                           if (dateValue) {
                             const date = new Date(dateValue);
+                            // Validate: if start date exists, target date must be >= start date
+                            if (entry.startDate) {
+                              const startDate = new Date(entry.startDate);
+                              if (date < startDate) {
+                                if (Platform.OS === 'web') {
+                                  window.alert('Target Date cannot be earlier than Start Date. Please select a later or equal date.');
+                                } else {
+                                  Alert.alert('Invalid Date', 'Target Date cannot be earlier than Start Date. Please select a later or equal date.');
+                                }
+                                return;
+                              }
+                            }
                             handleUpdateEntry(entry.id, 'targetDate', date);
                           } else {
                             handleUpdateEntry(entry.id, 'targetDate', null);
@@ -1071,7 +1114,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         style={{
                           width: '100%',
                           padding: '6px 8px',
-                          fontSize: '13px',
+                          fontSize: '14px',
                           border: '1px solid #E5E7EB',
                           borderRadius: '4px',
                           textAlign: 'center',
@@ -1130,7 +1173,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                             padding: '6px 8px',
                             border: '1px solid #E5E7EB',
                             borderRadius: '4px',
-                            fontSize: '13px',
+                            fontSize: '14px',
                             fontFamily: 'inherit',
                             resize: 'vertical'
                           }}
@@ -1190,6 +1233,18 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                             const dateValue = e.target.value;
                             if (dateValue) {
                               const date = new Date(dateValue);
+                              // Validate: if target date exists, start date must be <= target date
+                              if (sub.targetDate) {
+                                const targetDate = new Date(sub.targetDate);
+                                if (date > targetDate) {
+                                  if (Platform.OS === 'web') {
+                                    window.alert('Start Date cannot be later than Target Date. Please select an earlier or equal date.');
+                                  } else {
+                                    Alert.alert('Invalid Date', 'Start Date cannot be later than Target Date. Please select an earlier or equal date.');
+                                  }
+                                  return;
+                                }
+                              }
                               handleUpdateSubActivity(entry.id, sub.id, 'startDate', date);
                             } else {
                               handleUpdateSubActivity(entry.id, sub.id, 'startDate', undefined);
@@ -1201,7 +1256,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           style={{
                             width: '100%',
                             padding: '6px 8px',
-                            fontSize: '13px',
+                            fontSize: '14px',
                             border: '1px solid #E5E7EB',
                             borderRadius: '4px',
                             fontFamily: 'inherit',
@@ -1256,6 +1311,18 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                             const dateValue = e.target.value;
                             if (dateValue) {
                               const date = new Date(dateValue);
+                              // Validate: if start date exists, target date must be >= start date
+                              if (sub.startDate) {
+                                const startDate = new Date(sub.startDate);
+                                if (date < startDate) {
+                                  if (Platform.OS === 'web') {
+                                    window.alert('Target Date cannot be earlier than Start Date. Please select a later or equal date.');
+                                  } else {
+                                    Alert.alert('Invalid Date', 'Target Date cannot be earlier than Start Date. Please select a later or equal date.');
+                                  }
+                                  return;
+                                }
+                              }
                               handleUpdateSubActivity(entry.id, sub.id, 'targetDate', date);
                             } else {
                               handleUpdateSubActivity(entry.id, sub.id, 'targetDate', undefined);
@@ -1267,7 +1334,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           style={{
                             width: '100%',
                             padding: '6px 8px',
-                            fontSize: '13px',
+                            fontSize: '14px',
                             border: '1px solid #E5E7EB',
                             borderRadius: '4px',
                             fontFamily: 'inherit',
@@ -1424,7 +1491,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           style={{
                             width: '100%',
                             padding: '6px 8px',
-                            fontSize: '13px',
+                            fontSize: '14px',
                             border: '1px solid #E5E7EB',
                             borderRadius: '4px',
                             textAlign: 'center',
@@ -1559,7 +1626,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    fontSize: 13,
+    fontSize: 14,
     backgroundColor: '#fff'
   },
   filterPickerContainer: {
@@ -1576,7 +1643,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ACTION_BLUE
   },
   filterChipText: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
   filterChipTextActive: {
@@ -1599,12 +1666,19 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: colors.ACTION_BLUE,
-    paddingVertical: spacing.md
+    paddingVertical: spacing.md,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 0,
+        zIndex: 10
+      }
+    })
   },
   headerCell: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 14,
     paddingHorizontal: spacing.sm,
     textAlign: 'left'
   },
@@ -1632,7 +1706,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    fontSize: 13,
+    fontSize: 14,
     backgroundColor: '#fff',
     minHeight: 36
   },
@@ -1655,7 +1729,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '500'
   },
   selectChip: {
@@ -1672,7 +1746,7 @@ const styles = StyleSheet.create({
     borderColor: colors.ACTION_BLUE
   },
   selectChipText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
   selectChipTextActive: {
@@ -1687,7 +1761,7 @@ const styles = StyleSheet.create({
     borderWidth: 2
   },
   statusChipText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
   statusUpdatesContainer: {
@@ -1706,18 +1780,18 @@ const styles = StyleSheet.create({
     width: 230
   },
   statusTimestamp: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY,
     fontWeight: '600',
     marginBottom: 2
   },
   statusUpdateNote: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY,
     fontWeight: '400'
   },
   statusUpdateText: {
-    fontSize: 11,
+    fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
   emptyRow: {

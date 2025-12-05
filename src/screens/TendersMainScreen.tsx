@@ -34,7 +34,7 @@ const TenderCard = ({ item, onOpen }: { item: Tender; onOpen: () => void }) => (
 );
 
 const TendersMainScreen: React.FC<any> = ({ navigation }) => {
-  const { user } = useContext(AuthContext)!;
+  const { user, signOut } = useContext(AuthContext)!;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isMobile, isTablet, isDesktop } = useResponsive();
@@ -71,6 +71,10 @@ const TendersMainScreen: React.FC<any> = ({ navigation }) => {
   };
 
   const handleNavigate = (routeKey: string) => {
+    if (routeKey === 'Logout') {
+      signOut();
+      return;
+    }
     if (routeKey === 'Dashboard') navigation.navigate('MainNew');
     else if (routeKey === 'RateAnalysis') navigation.navigate('RateAnalysis');
   };

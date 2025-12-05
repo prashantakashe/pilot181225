@@ -36,6 +36,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   React.useEffect(() => {
     if (user) {
       navigation.replace('MainApp');
+    } else {
+      // Clear form fields when user is logged out
+      setEmail('');
+      setPassword('');
+      setEmailError('');
+      setPasswordError('');
     }
   }, [user, navigation]);
 

@@ -357,6 +357,7 @@ export const getAllEntries = async (): Promise<DWSDailyEntry[]> => {
         id: doc.id,
         ...data,
         date: toDate(data.date),
+        startDate: data.startDate ? toDate(data.startDate) : undefined,
         targetDate: data.targetDate ? toDate(data.targetDate) : undefined,
         createdAt: toDate(data.createdAt),
         updatedAt: toDate(data.updatedAt),
@@ -366,6 +367,8 @@ export const getAllEntries = async (): Promise<DWSDailyEntry[]> => {
         })),
         subActivities: (data.subActivities || []).map((sub: any) => ({
           ...sub,
+          startDate: sub.startDate ? toDate(sub.startDate) : undefined,
+          targetDate: sub.targetDate ? toDate(sub.targetDate) : undefined,
           statusUpdates: (sub.statusUpdates || []).map((update: any) => ({
             ...update,
             timestamp: toDate(update.timestamp)
@@ -393,6 +396,7 @@ export const subscribeToEntries = (
         id: doc.id,
         ...data,
         date: toDate(data.date),
+        startDate: data.startDate ? toDate(data.startDate) : undefined,
         targetDate: data.targetDate ? toDate(data.targetDate) : undefined,
         createdAt: toDate(data.createdAt),
         updatedAt: toDate(data.updatedAt),
@@ -402,6 +406,7 @@ export const subscribeToEntries = (
         })),
         subActivities: (data.subActivities || []).map((sub: any) => ({
           ...sub,
+          startDate: sub.startDate ? toDate(sub.startDate) : undefined,
           targetDate: sub.targetDate ? toDate(sub.targetDate) : undefined,
           statusUpdates: (sub.statusUpdates || []).map((update: any) => ({
             ...update,
@@ -434,6 +439,7 @@ export const getEntriesByDateRange = async (startDate: Date, endDate: Date): Pro
         id: doc.id,
         ...data,
         date: toDate(data.date),
+        startDate: data.startDate ? toDate(data.startDate) : undefined,
         targetDate: data.targetDate ? toDate(data.targetDate) : undefined,
         createdAt: toDate(data.createdAt),
         updatedAt: toDate(data.updatedAt),
@@ -443,6 +449,7 @@ export const getEntriesByDateRange = async (startDate: Date, endDate: Date): Pro
         })),
         subActivities: (data.subActivities || []).map((sub: any) => ({
           ...sub,
+          startDate: sub.startDate ? toDate(sub.startDate) : undefined,
           targetDate: sub.targetDate ? toDate(sub.targetDate) : undefined,
           statusUpdates: (sub.statusUpdates || []).map((update: any) => ({
             ...update,
@@ -501,6 +508,11 @@ export const updateEntry = async (id: string, updates: Partial<DWSDailyEntry>): 
     if (updates.date) {
       updateData.date = Timestamp.fromDate(updates.date instanceof Date ? updates.date : new Date(updates.date));
     }
+    if (updates.startDate) {
+      updateData.startDate = Timestamp.fromDate(updates.startDate instanceof Date ? updates.startDate : new Date(updates.startDate));
+    } else if (updates.startDate === null) {
+      updateData.startDate = null;
+    }
     if (updates.targetDate) {
       updateData.targetDate = Timestamp.fromDate(updates.targetDate instanceof Date ? updates.targetDate : new Date(updates.targetDate));
     } else if (updates.targetDate === null) {
@@ -511,6 +523,13 @@ export const updateEntry = async (id: string, updates: Partial<DWSDailyEntry>): 
     if (updates.subActivities) {
       updateData.subActivities = updates.subActivities.map(sub => {
         const cleanSub: any = { ...sub };
+        
+        // Convert startDate to Timestamp if it exists, otherwise remove the field
+        if (sub.startDate) {
+          cleanSub.startDate = Timestamp.fromDate(sub.startDate instanceof Date ? sub.startDate : new Date(sub.startDate));
+        } else {
+          delete cleanSub.startDate; // Remove undefined startDate
+        }
         
         // Convert targetDate to Timestamp if it exists, otherwise remove the field
         if (sub.targetDate) {

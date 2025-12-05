@@ -28,7 +28,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const [userName, setUserName] = useState('User');
   const [activeTab, setActiveTab] = useState<DWSTab>('DWSDashboard');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const { user } = useContext(AuthContext)!;
+  const { user, signOut } = useContext(AuthContext)!;
 
   useEffect(() => {
     if (user?.displayName) {
@@ -52,6 +52,10 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
 
   // Handle sidebar navigation
   const handleSidebarPress = (key: string) => {
+    if (key === 'Logout') {
+      signOut();
+      return;
+    }
     if (key === 'Dashboard') {
       navigation.navigate('MainNew');
     } else if (key.startsWith('DWS')) {

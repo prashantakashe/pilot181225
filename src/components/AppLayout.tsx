@@ -10,13 +10,14 @@
  * - Responsive behavior across all screen sizes
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Menu, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import TopBar from './TopBar';
 import SideBarNew from './SideBarNew';
 import { useResponsive } from '../hooks/useResponsive';
 import { auth } from '../services/firebase';
+import { AuthContext } from '../contexts/AuthContext';
 
 export interface MenuItem {
   key: string;
@@ -59,6 +60,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const navigation = useNavigation<any>();
   const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { signOut } = useContext(AuthContext)!;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
@@ -95,7 +97,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     }
 
     if (routeKey === 'Logout') {
-      auth.signOut();
+      signOut();
       return;
     }
 
