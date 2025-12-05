@@ -1146,14 +1146,31 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                   
                   {/* Final Status */}
                   <View style={[styles.cell, { width: 120 }]}>
-                    <Dropdown
-                      options={statuses.map(s => ({ value: s.name, label: s.name, color: s.color }))}
-                      value={entry.finalStatus}
-                      onSelect={(value) => handleUpdateEntry(entry.id, 'finalStatus', value)}
-                      placeholder="Select Status"
-                      width={110}
-                      showColorBadge={true}
-                    />
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      style={{ maxHeight: 100 }}
+                      contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}
+                    >
+                      {statuses.map(status => (
+                        <TouchableOpacity
+                          key={status.id}
+                          style={[
+                            styles.statusChip,
+                            { borderColor: status.color },
+                            entry.finalStatus === status.name && { backgroundColor: status.color }
+                          ]}
+                          onPress={() => handleUpdateEntry(entry.id, 'finalStatus', status.name)}
+                        >
+                          <Text style={[
+                            styles.statusChipText,
+                            entry.finalStatus === status.name && { color: '#fff', fontWeight: '600' }
+                          ]}>
+                            {status.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
                   </View>
                 </View>
                 
@@ -1523,14 +1540,31 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                     
                     {/* Status */}
                     <View style={[styles.cell, { width: 120 }]}>
-                      <Dropdown
-                        options={statuses.map(s => ({ value: s.name, label: s.name, color: s.color }))}
-                        value={sub.status}
-                        onSelect={(value) => handleUpdateSubActivity(entry.id, sub.id, 'status', value)}
-                        placeholder="Select Status"
-                        width={110}
-                        showColorBadge={true}
-                      />
+                      <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        style={{ maxHeight: 100 }}
+                        contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}
+                      >
+                        {statuses.map(status => (
+                          <TouchableOpacity
+                            key={status.id}
+                            style={[
+                              styles.statusChip,
+                              { borderColor: status.color },
+                              sub.status === status.name && { backgroundColor: status.color }
+                            ]}
+                            onPress={() => handleUpdateSubActivity(entry.id, sub.id, 'status', status.name)}
+                          >
+                            <Text style={[
+                              styles.statusChipText,
+                              sub.status === status.name && { color: '#fff', fontWeight: '600' }
+                            ]}>
+                              {status.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
                     </View>
                   </View>
                 ))}
