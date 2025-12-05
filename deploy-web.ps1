@@ -25,7 +25,12 @@ if (Test-Path "dist") {
     if (-not (Test-Path "web-build")) {
         New-Item -ItemType Directory -Path "web-build" -Force | Out-Null
     }
+    # Clean web-build first
+    Remove-Item web-build/* -Recurse -Force -ErrorAction SilentlyContinue
+    # Copy dist contents
     Copy-Item -Recurse -Force dist/* web-build/ -ErrorAction SilentlyContinue
+    # Add .nojekyll file for GitHub Pages
+    New-Item -ItemType File -Path "web-build/.nojekyll" -Force | Out-Null
 }
 
 Write-Host "SUCCESS: Build completed" -ForegroundColor Green
