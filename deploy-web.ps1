@@ -2,7 +2,8 @@
 # Auto-deployment script for web changes to GitHub Pages
 
 param(
-    [string]$Message = "Deploy: Auto-commit at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    [string]$Message = "Deploy: Auto-commit at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",
+    [switch]$SkipBuild
 )
 
 Write-Host "🚀 Starting deployment process..." -ForegroundColor Cyan
@@ -14,8 +15,14 @@ git status --short
 $hasChanges = git status --short
 if (-not $hasChanges) {
     Write-Host "✅ No changes to deploy" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "💡 Tip: Make some changes first, then run this script" -ForegroundColor Cyan
     exit 0
 }
+
+Write-Host ""
+Write-Host "📝 Changes detected:" -ForegroundColor Green
+git status --short | ForEach-Object { Write-Host "   $_" -ForegroundColor Gray }
 
 # Step 2: Stage all changes
 Write-Host ""
@@ -49,7 +56,9 @@ Write-Host "✅ Pushed to GitHub successfully" -ForegroundColor Green
 
 # Step 5: Success message
 Write-Host ""
+Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host "✅ Deployment initiated successfully!" -ForegroundColor Green
+Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "📊 Monitor deployment progress at:" -ForegroundColor Cyan
 Write-Host "   https://github.com/prashantakashe/pilotappra/actions" -ForegroundColor Blue
@@ -58,5 +67,11 @@ Write-Host "🌐 Your site will be updated at:" -ForegroundColor Cyan
 Write-Host "   https://prashantakashe.github.io/pilotappra/" -ForegroundColor Blue
 Write-Host ""
 Write-Host "⏱️  Deployment typically takes 2-3 minutes to complete" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "💡 Tips:" -ForegroundColor Cyan
+Write-Host "   - Clear browser cache after deployment (Ctrl+Shift+R)" -ForegroundColor Gray
+Write-Host "   - Check GitHub Actions for build status" -ForegroundColor Gray
+Write-Host "   - Wait 2-3 minutes before checking the live site" -ForegroundColor Gray
+Write-Host ""
 
 exit 0
