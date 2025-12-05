@@ -2,88 +2,78 @@
 # Auto-deployment script for web changes to GitHub Pages
 
 param(
-    [string]$Message = "Deploy: Auto-commit at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",
-    [switch]$SkipBuild
+    [string]$Message = "Deploy: Auto-commit at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 )
 
-Write-Host "🚀 Starting deployment process..." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  WEB DEPLOYMENT TO GITHUB PAGES" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Step 0: Build web app if not skipped
-if (-not $SkipBuild) {
-    Write-Host "🔨 Building web application..." -ForegroundColor Yellow
-    npx expo export --platform web
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Build failed" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "✅ Build completed successfully" -ForegroundColor Green
-    Write-Host ""
+# Step 1: Build web app
+Write-Host "[1/5] Building web application..." -ForegroundColor Yellow
+npx expo export --platform web 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERROR: Build failed" -ForegroundColor Red
+    Write-Host "Run manually: npx expo export --platform web" -ForegroundColor Gray
+    exit 1
 }
+Write-Host "SUCCESS: Build completed" -ForegroundColor Green
+Write-Host ""
 
-# Step 1: Check for changes
-Write-Host "📋 Checking for changes..." -ForegroundColor Yellow
-git status --short
+# Step 2: Check for changes
+Write-Host "[2/5] Checking for changes..." -ForegroundColor Yellow
 $hasChanges = git status --short
 if (-not $hasChanges) {
-    Write-Host "✅ No changes to deploy" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "💡 Tip: Make some changes first, then run this script" -ForegroundColor Cyan
+    Write-Host "INFO: No changes to deploy" -ForegroundColor Yellow
     exit 0
 }
-
+Write-Host "SUCCESS: Changes detected" -ForegroundColor Green
 Write-Host ""
-Write-Host "📝 Changes detected:" -ForegroundColor Green
-git status --short | ForEach-Object { Write-Host "   $_" -ForegroundColor Gray }
 
-# Step 2: Stage all changes
-Write-Host ""
-Write-Host "📦 Staging changes..." -ForegroundColor Yellow
+# Step 3: Stage all changes
+Write-Host "[3/5] Staging changes..." -ForegroundColor Yellow
 git add .
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Failed to stage changes" -ForegroundColor Red
+    Write-Host "ERROR: Failed to stage changes" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ Changes staged" -ForegroundColor Green
-
-# Step 3: Commit changes
+Write-Host "SUCCESS: Changes staged" -ForegroundColor Green
 Write-Host ""
-Write-Host "💾 Committing changes..." -ForegroundColor Yellow
+
+# Step 4: Commit changes
+Write-Host "[4/5] Committing changes..." -ForegroundColor Yellow
 git commit -m $Message
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Failed to commit changes" -ForegroundColor Red
+    Write-Host "ERROR: Failed to commit" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ Changes committed" -ForegroundColor Green
-
-# Step 4: Push to GitHub
+Write-Host "SUCCESS: Changes committed" -ForegroundColor Green
 Write-Host ""
-Write-Host "🌐 Pushing to GitHub..." -ForegroundColor Yellow
+
+# Step 5: Push to GitHub
+Write-Host "[5/5] Pushing to GitHub..." -ForegroundColor Yellow
 git push origin main
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Failed to push to GitHub" -ForegroundColor Red
+    Write-Host "ERROR: Failed to push" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ Pushed to GitHub successfully" -ForegroundColor Green
+Write-Host "SUCCESS: Pushed to GitHub" -ForegroundColor Green
+Write-Host ""
 
-# Step 5: Success message
+# Success message
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "  DEPLOYMENT INITIATED SUCCESSFULLY!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "✅ Deployment initiated successfully!" -ForegroundColor Green
-Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "Monitor deployment:" -ForegroundColor Cyan
+Write-Host "  https://github.com/prashantakashe/pilotappra/actions" -ForegroundColor Blue
 Write-Host ""
-Write-Host "📊 Monitor deployment progress at:" -ForegroundColor Cyan
-Write-Host "   https://github.com/prashantakashe/pilotappra/actions" -ForegroundColor Blue
+Write-Host "Live site (~1 minute):" -ForegroundColor Cyan
+Write-Host "  https://prashantakashe.github.io/pilotappra/" -ForegroundColor Blue
 Write-Host ""
-Write-Host "🌐 Your site will be updated at:" -ForegroundColor Cyan
-Write-Host "   https://prashantakashe.github.io/pilotappra/" -ForegroundColor Blue
-Write-Host ""
-Write-Host "⏱️  Deployment typically takes 30-60 seconds to complete" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "💡 Tips:" -ForegroundColor Cyan
-Write-Host "   - Clear browser cache after deployment (Ctrl+Shift+R)" -ForegroundColor Gray
-Write-Host "   - Check GitHub Actions for deployment status" -ForegroundColor Gray
-Write-Host "   - Wait ~1 minute before checking the live site" -ForegroundColor Gray
+Write-Host "TIP: Clear browser cache (Ctrl+Shift+R) to see changes" -ForegroundColor Yellow
 Write-Host ""
 
 exit 0

@@ -77,22 +77,37 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
       // For web platform, we need to instruct the user to run the script manually
       // Since we can't execute PowerShell from browser for security reasons
       
-      addLog('📝 MANUAL DEPLOYMENT INSTRUCTIONS:');
+      addLog('📝 DEPLOYMENT INSTRUCTIONS:');
       addLog('');
-      addLog('1. Open PowerShell in your project directory:');
+      addLog('OPTION 1 - AUTOMATED (Recommended):');
+      addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      addLog('1. Open PowerShell in project directory:');
       addLog('   E:\\prashant\\APP_PILOT PROJECT');
       addLog('');
       addLog('2. Run the deployment script:');
       addLog('   .\\deploy-web.ps1');
       addLog('');
-      addLog('OR use these commands manually:');
-      addLog('   git add .');
-      addLog('   git commit -m "Deploy: ' + new Date().toLocaleString() + '"');
-      addLog('   git push origin main');
+      addLog('This script will:');
+      addLog('  ✓ Build web app (npx expo export --platform web)');
+      addLog('  ✓ Stage all changes (git add .)');
+      addLog('  ✓ Commit changes');
+      addLog('  ✓ Push to GitHub');
+      addLog('  ✓ Deploy to GitHub Pages automatically');
       addLog('');
-      addLog('✅ Your changes will be deployed to GitHub Pages');
-      addLog('🌐 Monitor progress at: https://github.com/prashantakashe/pilotappra/actions');
-      addLog('📍 Live site: https://prashantakashe.github.io/pilotappra/');
+      addLog('OPTION 2 - MANUAL STEPS:');
+      addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      addLog('1. npx expo export --platform web');
+      addLog('2. git add .');
+      addLog('3. git commit -m "Deploy: ' + new Date().toLocaleString() + '"');
+      addLog('4. git push origin main');
+      addLog('');
+      addLog('📊 Monitor progress:');
+      addLog('   https://github.com/prashantakashe/pilotappra/actions');
+      addLog('');
+      addLog('🌐 Live site (after ~1 minute):');
+      addLog('   https://prashantakashe.github.io/pilotappra/');
+      addLog('');
+      addLog('💡 Remember: Clear browser cache (Ctrl+Shift+R) after deployment');
       
       // Copy deployment command to clipboard
       try {
@@ -105,14 +120,24 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
       }
 
       window.alert(
-        '📋 Deployment Instructions\n\n' +
-        'Open PowerShell in your project directory and run:\n' +
-        '.\\deploy-web.ps1\n\n' +
-        'OR manually execute:\n' +
-        'git add .\n' +
-        'git commit -m "Deploy"\n' +
-        'git push origin main\n\n' +
-        '✅ Command copied to clipboard!'
+        '🚀 DEPLOYMENT READY!\n\n' +
+        '══════════════════════════════\n' +
+        'QUICK DEPLOY (Recommended):\n' +
+        '══════════════════════════════\n\n' +
+        '1. Open PowerShell in:\n' +
+        '   E:\\prashant\\APP_PILOT PROJECT\n\n' +
+        '2. Run:\n' +
+        '   .\\deploy-web.ps1\n\n' +
+        '══════════════════════════════\n' +
+        'MANUAL STEPS:\n' +
+        '══════════════════════════════\n\n' +
+        '1. npx expo export --platform web\n' +
+        '2. git add .\n' +
+        '3. git commit -m "Deploy"\n' +
+        '4. git push origin main\n\n' +
+        '✅ Command copied to clipboard!\n' +
+        '⏱️ Deployment takes ~1 minute\n' +
+        '🔄 Clear cache after: Ctrl+Shift+R'
       );
 
     } catch (error: any) {
@@ -160,12 +185,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
           )}
 
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>ℹ️ How it works:</Text>
-            <Text style={styles.infoText}>• Stages all your changes</Text>
-            <Text style={styles.infoText}>• Commits with timestamp</Text>
-            <Text style={styles.infoText}>• Pushes to GitHub</Text>
-            <Text style={styles.infoText}>• Triggers automatic build & deployment</Text>
-            <Text style={styles.infoText}>• Updates live site in 2-3 minutes</Text>
+            <Text style={styles.infoTitle}>ℹ️ How deployment works:</Text>
+            <Text style={styles.infoText}>• Builds web app locally (npx expo export)</Text>
+            <Text style={styles.infoText}>• Stages all changes including build files</Text>
+            <Text style={styles.infoText}>• Commits with auto-generated timestamp</Text>
+            <Text style={styles.infoText}>• Pushes to GitHub repository</Text>
+            <Text style={styles.infoText}>• GitHub Actions deploys to GitHub Pages</Text>
+            <Text style={styles.infoText}>• Live site updates in ~1 minute</Text>
           </View>
 
           <View style={styles.linkBox}>
