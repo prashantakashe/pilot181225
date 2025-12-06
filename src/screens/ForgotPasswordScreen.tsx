@@ -55,7 +55,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
       setSubmitted(true);
       Alert.alert(
         'Reset Link Sent',
-        "If an account exists with this email, we've sent password reset instructions.",
+        `Password reset link has been sent to ${email}. Please check your email inbox and spam folder.`,
         [
           {
             text: 'Back to Login',
@@ -63,10 +63,11 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
           },
         ]
       );
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Password reset error:', error);
       Alert.alert(
-        'Error',
-        "If an account exists with this email, we've sent password reset instructions."
+        'Reset Link Sent',
+        `If an account exists with ${email}, we've sent password reset instructions. Please check your email.`
       );
     } finally {
       setLoading(false);

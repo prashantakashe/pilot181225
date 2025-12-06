@@ -27,6 +27,26 @@ import * as XLSX from 'xlsx';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../services/firebase';
 
+// Helper function to format dates consistently as dd-mm-yyyy
+const formatDateDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+// Helper function to format date with time as dd-mm-yyyy, HH:MM AM/PM
+const formatDateTimeDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${day}-${month}-${year}, ${displayHours}:${minutes} ${ampm}`;
+};
+
 type ReportType = 'daily' | 'project' | 'user' | 'status' | 'delay' | 'workload' | 'target' | 'statusConversion' | 'contribution' | 'tomorrow';
 
 // Dropdown Component with Search
@@ -429,7 +449,7 @@ export const DWSReportTab: React.FC = () => {
           ...entry,
           daysDiff,
           pendingSinceDays,
-          targetDateFormatted: targetDate.toLocaleDateString('en-IN')
+          targetDateFormatted: formatDateDDMMYYYY(targetDate)
         };
         
         if (daysDiff < 0 && entry.finalStatus !== 'Completed') {
@@ -491,7 +511,10 @@ export const DWSReportTab: React.FC = () => {
       const reportInfo = [[
         `Report Type: ${reportType}`,
         `Date Range: ${startDate || 'All'} to ${endDate || 'All'}`,
-        `Generated: ${new Date().toLocaleString()}`
+        (() => {
+          const now = new Date();
+          return `Generated: ${formatDateTimeDDMMYYYY(now)}`;
+        })()
       ]];
       const emptyRow = [[]];
       
@@ -695,7 +718,7 @@ export const DWSReportTab: React.FC = () => {
               <div class="report-info">
                 <strong>Report Type:</strong> ${reportType.toUpperCase()} |
                 <strong>Date Range:</strong> ${startDate || 'All'} to ${endDate || 'All'} |
-                <strong>Generated:</strong> ${new Date().toLocaleString()}
+                <strong>Generated:</strong> ${formatDateTimeDDMMYYYY(new Date())}
               </div>
             </div>
             
@@ -755,7 +778,7 @@ export const DWSReportTab: React.FC = () => {
             
             <div class="footer">
               <p><strong>Daily Work Status Management System</strong></p>
-              <p>Report generated on ${new Date().toLocaleString()} | Page 1 of 1</p>
+              <p>Report generated on ${formatDateTimeDDMMYYYY(new Date())} | Page 1 of 1</p>
               <p style="margin-top: 5px; font-size: 8px;">© ${new Date().getFullYear()} - Confidential & Proprietary</p>
             </div>
           </body>
@@ -806,7 +829,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary sheet
       const summaryData = [
         ['Delay Analysis Report'],
-        ['Generated:', new Date().toLocaleString()],
+        ['Generated:', formatDateTimeDDMMYYYY(new Date())],
         [],
         ['Summary'],
         ['Overdue Tasks:', delayedTasks.length],
@@ -907,7 +930,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>⚠️ Delay Analysis Report</h1>
-              <p style="margin: 5px 0; font-size: 11px;">${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p style="margin: 5px 0; font-size: 11px;">${formatDateDDMMYYYY(new Date())}</p>
             </div>
             
             <div class="summary-box">
@@ -1011,7 +1034,7 @@ export const DWSReportTab: React.FC = () => {
             
             <div class="footer">
               <p><strong>Daily Work Status - Delay Analysis Report</strong></p>
-              <p>Generated on ${new Date().toLocaleString()} | © ${new Date().getFullYear()}</p>
+              <p>Generated on ${formatDateTimeDDMMYYYY(new Date())} | © ${new Date().getFullYear()}</p>
             </div>
           </body>
           </html>
@@ -1042,7 +1065,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary Sheet
       const summaryData = [
         ['WORKLOAD DISTRIBUTION REPORT'],
-        ['Generated on:', new Date().toLocaleString()],
+        ['Generated on:', formatDateTimeDDMMYYYY(new Date())],
         [''],
         ['SUMMARY'],
         ['Total Personnel', workloadData.length],
@@ -1152,7 +1175,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>👥 WORKLOAD DISTRIBUTION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1284,7 +1307,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>🌅 TOMORROW'S ACTIVITIES REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Date: ${tomorrowReport.reportDate} | Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Date: ${tomorrowReport.reportDate} | Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1483,7 +1506,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>🎯 TARGET ACHIEVEMENT REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1568,7 +1591,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary Sheet
       const summaryData = [
         ['STATUS CONVERSION REPORT'],
-        ['Generated on:', new Date().toLocaleString()],
+        ['Generated on:', formatDateTimeDDMMYYYY(new Date())],
         [''],
         ['SUMMARY'],
         ['Total Conversions', statusConversionData.totalConversions],
@@ -1647,7 +1670,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>🔄 STATUS CONVERSION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1813,7 +1836,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>⭐ CONTRIBUTION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1941,7 +1964,7 @@ export const DWSReportTab: React.FC = () => {
       
       // Create special report data structure
       const tomorrowData = {
-        reportDate: tomorrow.toLocaleDateString('en-GB'),
+        reportDate: formatDateDDMMYYYY(tomorrow),
         startingTomorrow: startingTomorrow.map(entry => ({
           ...entry,
           priority: entry.targetDate ? 

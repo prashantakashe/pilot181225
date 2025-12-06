@@ -32,6 +32,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const [userName, setUserName] = useState('User');
   const [activeTab, setActiveTab] = useState<DWSTab>('DWSDashboard');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [masterSubTab, setMasterSubTab] = useState<string>('');
   const [userRole, setUserRole] = useState<SystemRole>(null);
   const [personnel, setPersonnel] = useState<DWSPersonnel[]>([]);
   const { user, signOut } = useContext(AuthContext)!;
@@ -81,6 +82,10 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       if (key === 'DWSDaily') {
         setStatusFilter('');
       }
+      // Clear master sub-tab filter when manually navigating
+      if (key === 'DWSMaster') {
+        setMasterSubTab('');
+      }
     }
   };
 
@@ -101,7 +106,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const renderContent = () => {
     switch (activeTab) {
       case 'DWSMaster':
-        return <DWSMasterDataTab />;
+        return <DWSMasterDataTab key={masterSubTab} initialSubTab={masterSubTab as any} />;
       case 'DWSDaily':
         return <DWSDailyEntryTab key={statusFilter} initialFilter={statusFilter} />;
       case 'DWSReport':
@@ -109,7 +114,11 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       case 'DWSDashboard':
         return <DWSDashboardTab onNavigate={(tab: DWSTab, filter?: string) => {
           setActiveTab(tab);
-          setStatusFilter(filter || '');
+          if (tab === 'DWSMaster' && filter) {
+            setMasterSubTab(filter);
+          } else {
+            setStatusFilter(filter || '');
+          }
         }} />;
       case 'DWSUsers':
         return <DWSUserManagementTab />;

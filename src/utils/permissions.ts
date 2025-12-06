@@ -103,6 +103,7 @@ export const canConfigureSettings = (role: SystemRole): boolean => {
 
 /**
  * Filter entries based on user role
+ * TESTING MODE: All users can see all entries
  */
 export const filterEntriesByPermission = (
   entries: any[],
@@ -111,26 +112,30 @@ export const filterEntriesByPermission = (
   userName: string,
   personnel: any[]
 ): any[] => {
+  // TESTING PHASE: All users see all entries
+  return entries;
+
+  // ORIGINAL CODE (commented out for testing):
   // Admin sees everything
-  if (userRole === 'Admin') return entries;
+  // if (userRole === 'Admin') return entries;
 
   // Manager sees their team's entries
-  if (userRole === 'Manager') {
-    const teamMembers = personnel
-      .filter(p => p.reportsTo === userId)
-      .map(p => p.name);
-    
-    return entries.filter(entry => 
-      entry.assignedTo === userName || 
-      teamMembers.includes(entry.assignedTo) ||
-      entry.createdBy === userId
-    );
-  }
+  // if (userRole === 'Manager') {
+  //   const teamMembers = personnel
+  //     .filter(p => p.reportsTo === userId)
+  //     .map(p => p.name);
+  //   
+  //   return entries.filter(entry => 
+  //     entry.assignedTo === userName || 
+  //     teamMembers.includes(entry.assignedTo) ||
+  //     entry.createdBy === userId
+  //   );
+  // }
 
   // Engineer sees only their own entries
-  return entries.filter(entry => 
-    entry.assignedTo === userName || entry.createdBy === userId
-  );
+  // return entries.filter(entry => 
+  //   entry.assignedTo === userName || entry.createdBy === userId
+  // );
 };
 
 /**

@@ -125,7 +125,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 <View style={styles.infoRow}>
                   <Text style={styles.label}>Member Since:</Text>
                   <Text style={styles.value}>
-                    {profile.createdAt?.toDate?.()?.toLocaleDateString?.() || 'N/A'}
+                    {(() => {
+                      const date = profile.createdAt?.toDate?.();
+                      if (!date) return 'N/A';
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const year = date.getFullYear();
+                      return `${day}-${month}-${year}`;
+                    })()}
                   </Text>
                 </View>
 

@@ -36,9 +36,20 @@ import { PROJECT_CATEGORIES, DEPARTMENTS, SYSTEM_ROLES } from '../../types/daily
 
 type MasterSubTab = 'projects' | 'personnel' | 'statuses';
 
-export const DWSMasterDataTab: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<MasterSubTab>('projects');
+interface DWSMasterDataTabProps {
+  initialSubTab?: MasterSubTab;
+}
+
+export const DWSMasterDataTab: React.FC<DWSMasterDataTabProps> = ({ initialSubTab }) => {
+  const [activeSubTab, setActiveSubTab] = useState<MasterSubTab>(initialSubTab || 'projects');
   const [loading, setLoading] = useState(true);
+  
+  // Update activeSubTab when initialSubTab changes
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
   
   // Projects state
   const [projects, setProjects] = useState<DWSProject[]>([]);

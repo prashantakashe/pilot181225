@@ -60,7 +60,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr || dateStr.length !== 10) return dateStr;
     const parts = dateStr.split('-');
-    return `${parts[2]}/${parts[1]}/${parts[0]}`; // DD/MM/YYYY
+    return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY
   };
 
   return (
@@ -95,7 +95,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             disabled={disabled}
           >
             <Text style={[styles.dateText, !value && styles.placeholder]}>
-              {value ? formatDisplayDate(value) : 'DD/MM/YYYY'}
+              {value ? formatDisplayDate(value) : 'DD-MM-YYYY'}
             </Text>
             <Text style={styles.calendarIcon}>📅</Text>
           </TouchableOpacity>

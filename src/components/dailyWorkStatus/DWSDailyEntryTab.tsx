@@ -865,7 +865,11 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         value={entry.startDate ? (() => {
                           try {
                             const date = new Date(entry.startDate);
-                            return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                            if (isNaN(date.getTime())) return '';
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${day}`;
                           } catch {
                             return '';
                           }
@@ -939,7 +943,11 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         value={entry.targetDate ? (() => {
                           try {
                             const date = new Date(entry.targetDate);
-                            return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                            if (isNaN(date.getTime())) return '';
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${day}`;
                           } catch {
                             return '';
                           }
@@ -949,7 +957,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           e.stopPropagation();
                           const dateValue = e.target.value;
                           if (dateValue) {
-                            const date = new Date(dateValue);
+                            const [year, month, day] = dateValue.split('-').map(Number);
+                            const date = new Date(year, month - 1, day);
                             // Validate: if start date exists, target date must be >= start date
                             if (entry.startDate) {
                               const startDate = new Date(entry.startDate);
@@ -1266,7 +1275,11 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           value={sub.startDate ? (() => {
                             try {
                               const date = new Date(sub.startDate);
-                              return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                              if (isNaN(date.getTime())) return '';
+                              const year = date.getFullYear();
+                              const month = String(date.getMonth() + 1).padStart(2, '0');
+                              const day = String(date.getDate()).padStart(2, '0');
+                              return `${year}-${month}-${day}`;
                             } catch {
                               return '';
                             }
@@ -1344,7 +1357,11 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           value={sub.targetDate ? (() => {
                             try {
                               const date = new Date(sub.targetDate);
-                              return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                              if (isNaN(date.getTime())) return '';
+                              const year = date.getFullYear();
+                              const month = String(date.getMonth() + 1).padStart(2, '0');
+                              const day = String(date.getDate()).padStart(2, '0');
+                              return `${year}-${month}-${day}`;
                             } catch {
                               return '';
                             }
@@ -1355,7 +1372,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           onChange={(e: any) => {
                             const dateValue = e.target.value;
                             if (dateValue) {
-                              const date = new Date(dateValue);
+                              const [year, month, day] = dateValue.split('-').map(Number);
+                              const date = new Date(year, month - 1, day);
                               // Validate: if start date exists, target date must be >= start date
                               if (sub.startDate) {
                                 const startDate = new Date(sub.startDate);
