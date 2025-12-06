@@ -4,7 +4,7 @@
  * Allows creating/editing daily work entries with sub-activities
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,8 @@ import {
   addStatusUpdateToEntry
 } from '../../services/dailyWorkStatusService';
 import type { DWSProject, DWSPersonnel, DWSStatus, DWSDailyEntry, DWSSubActivity } from '../../types/dailyWorkStatus';
+import { getUserRole, filterEntriesByPermission } from '../../utils/permissions';
+import { AuthContext } from '../../contexts/AuthContext';
 
 // Dropdown Component
 interface DropdownOption {
@@ -262,9 +264,15 @@ interface DWSDailyEntryTabProps {
 }
 
 export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilter }) => {
+  const { user } = useContext(AuthContext)!;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  
+  // User info
+  const [userName, setUserName] = useState('');
+  const [userId, setUserId] = useState('');
+  const [userRole, setUserRole] = useState<'Admin' | 'Manager' | 'Engineer' | null>(null);
   
   // Master data
   const [projects, setProjects] = useState<DWSProject[]>([]);
@@ -346,8 +354,27 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
   useEffect(() => {
     setLoading(true);
     
+    // Get user info
+    if (user?.email) {
+      setUserId(user.uid || user.email);
+      const emailName = user.email.split('@')[0];
+      setUserName(emailName);
+    }
+    
     const unsubProjects = dailyWorkStatusService.subscribeToProjects(setProjects);
-    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel(setPersonnel);
+    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel((personnelList) => {
+      setPersonnel(personnelList);
+      // Determine user role
+      if (user?.email) {
+        const role = getUserRole(user.email, personnelList);
+        setUserRole(role);
+        // Set proper user name from personnel
+        const userProfile = personnelList.find(p => p.email === user.email);
+        if (userProfile) {
+          setUserName(userProfile.name);
+        }
+      }
+    });
     const unsubStatuses = dailyWorkStatusService.subscribeToStatuses(setStatuses);
     const unsubEntries = dailyWorkStatusService.subscribeToEntries((data) => {
       setEntries(data);
@@ -647,15 +674,27 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
     }
   };
 
-  // Filter entries
-  const filteredEntries = entries.filter(entry => {
-    if (filterProject && !entry.projectName.toLowerCase().includes(filterProject.toLowerCase())) return false;
-    if (filterDate && !entry.dateTime.toLowerCase().includes(filterDate.toLowerCase())) return false;
-    if (filterActivity && !entry.mainActivity.toLowerCase().includes(filterActivity.toLowerCase())) return false;
-    if (filterAssigned && !entry.assignedTo.toLowerCase().includes(filterAssigned.toLowerCase())) return false;
-    if (filterStatus && entry.finalStatus !== filterStatus) return false;
-    return true;
-  });
+  // Filter entries based on role and other filters
+  const filteredEntries = (() => {
+    // First apply role-based filtering
+    const roleFiltered = filterEntriesByPermission(
+      entries,
+      userRole,
+      userId,
+      userName,
+      personnel
+    );
+    
+    // Then apply user's search filters
+    return roleFiltered.filter(entry => {
+      if (filterProject && !entry.projectName.toLowerCase().includes(filterProject.toLowerCase())) return false;
+      if (filterDate && !entry.dateTime.toLowerCase().includes(filterDate.toLowerCase())) return false;
+      if (filterActivity && !entry.mainActivity.toLowerCase().includes(filterActivity.toLowerCase())) return false;
+      if (filterAssigned && !entry.assignedTo.toLowerCase().includes(filterAssigned.toLowerCase())) return false;
+      if (filterStatus && entry.finalStatus !== filterStatus) return false;
+      return true;
+    });
+  })();
 
   if (loading) {
     return (
@@ -747,7 +786,13 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
             {filteredEntries.map((entry, index) => (
               <View key={entry.id} style={[index % 2 === 1 && styles.alternateRow]}>
                 {/* Main Entry Row */}
-                <View style={styles.tableRow}>
+                <View style={[
+                  styles.tableRow,
+                  entry.statusUpdates?.filter(u => u.note).length === 0 && {
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E5E7EB'
+                  }
+                ]}>
                   {/* Project Dropdown */}
                   <View style={[styles.cell, { width: 150 }]}>
                     <Dropdown
@@ -801,20 +846,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         spellCheck={false}
                       />
                     )}
-                    {/* Status Updates */}
-                    <View style={styles.statusUpdatesContainer}>
-                      {entry.statusUpdates?.filter(u => u.note).map((update, idx) => {
-                        const timestamp = formatTimestamp(update.timestamp);
-                        return (
-                          <View key={idx} style={styles.statusUpdate}>
-                            <Text style={styles.statusTimestamp}>
-                              {timestamp || 'Status Update'}
-                            </Text>
-                            <Text style={styles.statusUpdateNote}>{update.note}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
                   </View>
                   
                   {/* Start Date */}
@@ -1146,39 +1177,50 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                   
                   {/* Final Status */}
                   <View style={[styles.cell, { width: 120 }]}>
-                    <ScrollView 
-                      horizontal 
-                      showsHorizontalScrollIndicator={false}
-                      style={{ maxHeight: 100 }}
-                      contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}
-                    >
-                      {statuses.map(status => (
-                        <TouchableOpacity
-                          key={status.id}
-                          style={[
-                            styles.statusChip,
-                            { borderColor: status.color },
-                            entry.finalStatus === status.name && { backgroundColor: status.color }
-                          ]}
-                          onPress={() => handleUpdateEntry(entry.id, 'finalStatus', status.name)}
-                        >
-                          <Text style={[
-                            styles.statusChipText,
-                            entry.finalStatus === status.name && { color: '#fff', fontWeight: '600' }
-                          ]}>
-                            {status.name}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+                    <Dropdown
+                      options={statuses.map(s => ({ value: s.name, label: s.name, color: s.color }))}
+                      value={entry.finalStatus}
+                      onSelect={(value) => handleUpdateEntry(entry.id, 'finalStatus', value)}
+                      placeholder="Select Status"
+                      width={110}
+                      showColorBadge={true}
+                    />
                   </View>
                 </View>
                 
+                {/* Status Updates Row - Full Width */}
+                {entry.statusUpdates?.filter(u => u.note).length > 0 && (
+                  <View style={styles.statusUpdatesRow}>
+                    <View style={{ width: 250 }} />
+                    <View style={styles.statusUpdatesContainer}>
+                      {entry.statusUpdates?.filter(u => u.note).map((update, idx) => {
+                        const timestamp = formatTimestamp(update.timestamp);
+                        return (
+                          <View key={idx} style={styles.statusUpdate}>
+                            <Text style={styles.statusTimestamp}>
+                              {timestamp || 'Status Update'}
+                            </Text>
+                            <Text style={styles.statusUpdateNote}>{update.note}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+                
                 {/* Sub-Activity Rows */}
                 {entry.subActivities?.map((sub) => (
-                  <View key={sub.id} style={[styles.tableRow, styles.subRow]}>
-                    <View style={[styles.cell, { width: 150 }]} />
-                    <View style={[styles.cell, { width: 100 }]} />
+                  <React.Fragment key={sub.id}>
+                    <View style={[
+                      styles.tableRow, 
+                      styles.subRow,
+                      sub.statusUpdates?.filter(u => u.note).length === 0 && {
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#E5E7EB'
+                      }
+                    ]}>
+                      <View style={[styles.cell, { width: 150 }]} />
+                      <View style={[styles.cell, { width: 100 }]} />
                     
                     {/* Sub Activity Description */}
                     <View style={[styles.cell, { width: 250 }]}>
@@ -1214,20 +1256,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           multiline
                         />
                       )}
-                      {/* Sub-Activity Status Updates */}
-                      <View style={styles.statusUpdatesContainer}>
-                        {sub.statusUpdates?.filter(u => u.note).map((update, idx) => {
-                          const timestamp = formatTimestamp(update.timestamp);
-                          return (
-                            <View key={idx} style={styles.statusUpdate}>
-                              <Text style={styles.statusTimestamp}>
-                                {timestamp || 'Status Update'}
-                              </Text>
-                              <Text style={styles.statusUpdateNote}>{update.note}</Text>
-                            </View>
-                          );
-                        })}
-                      </View>
                     </View>
                     
                     {/* Start Date */}
@@ -1540,33 +1568,37 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                     
                     {/* Status */}
                     <View style={[styles.cell, { width: 120 }]}>
-                      <ScrollView 
-                        horizontal 
-                        showsHorizontalScrollIndicator={false}
-                        style={{ maxHeight: 100 }}
-                        contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}
-                      >
-                        {statuses.map(status => (
-                          <TouchableOpacity
-                            key={status.id}
-                            style={[
-                              styles.statusChip,
-                              { borderColor: status.color },
-                              sub.status === status.name && { backgroundColor: status.color }
-                            ]}
-                            onPress={() => handleUpdateSubActivity(entry.id, sub.id, 'status', status.name)}
-                          >
-                            <Text style={[
-                              styles.statusChipText,
-                              sub.status === status.name && { color: '#fff', fontWeight: '600' }
-                            ]}>
-                              {status.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
+                      <Dropdown
+                        options={statuses.map(s => ({ value: s.name, label: s.name, color: s.color }))}
+                        value={sub.status}
+                        onSelect={(value) => handleUpdateSubActivity(entry.id, sub.id, 'status', value)}
+                        placeholder="Select Status"
+                        width={110}
+                        showColorBadge={true}
+                      />
                     </View>
                   </View>
+                  
+                  {/* Sub-Activity Status Updates Row - Full Width */}
+                  {sub.statusUpdates?.filter(u => u.note).length > 0 && (
+                    <View style={styles.statusUpdatesRow}>
+                      <View style={{ width: 250 }} />
+                      <View style={styles.statusUpdatesContainer}>
+                        {sub.statusUpdates?.filter(u => u.note).map((update, idx) => {
+                          const timestamp = formatTimestamp(update.timestamp);
+                          return (
+                            <View key={idx} style={styles.statusUpdate}>
+                              <Text style={styles.statusTimestamp}>
+                                {timestamp || 'Status Update'}
+                              </Text>
+                              <Text style={styles.statusUpdateNote}>{update.note}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  )}
+                  </React.Fragment>
                 ))}
               </View>
             ))}
@@ -1693,6 +1725,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    width: 1130,
     ...Platform.select({
       web: { boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }
     })
@@ -1718,17 +1751,17 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 0,
     minHeight: 60,
     alignItems: 'flex-start',
-    paddingVertical: spacing.sm
+    paddingVertical: spacing.sm,
+    backgroundColor: 'transparent'
   },
   alternateRow: {
     backgroundColor: '#F9FAFB'
   },
   subRow: {
-    backgroundColor: '#F8F9FA'
+    backgroundColor: 'transparent'
   },
   cell: {
     paddingHorizontal: spacing.sm,
@@ -1798,10 +1831,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
+  statusUpdatesRow: {
+    width: 1130,
+    padding: spacing.sm,
+    paddingTop: 0,
+    paddingBottom: spacing.md,
+    borderTopWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'transparent'
+  },
+  statusUpdatesScrollView: {
+    marginTop: spacing.xs,
+    maxHeight: 120
+  },
   statusUpdatesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: spacing.xs
+    gap: spacing.xs,
+    alignItems: 'flex-start',
+    flex: 1,
+    maxWidth: 880
   },
   statusUpdate: {
     backgroundColor: '#FFF3CD',
@@ -1809,9 +1861,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: '#FFC107',
     borderRadius: 4,
-    marginRight: spacing.xs,
-    marginBottom: spacing.xs,
-    width: 230
+    width: 230,
+    minWidth: 230
   },
   statusTimestamp: {
     fontSize: 14,

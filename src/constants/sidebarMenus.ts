@@ -57,10 +57,33 @@ export const PROJECTS_NAV: MenuItem[] = [
 export const DAILY_WORK_STATUS_NAV: MenuItem[] = [
   { key: 'DWSDashboard', label: 'Dashboard', icon: '📈' },
   { key: 'DWSDaily', label: 'Daily Entry', icon: '📝' },
-  { key: 'DWSMaster', label: 'Master Data', icon: '📁' },
+  { key: 'DWSMaster', label: 'Master Data', icon: '📁' }, // Admin only
   { key: 'DWSReport', label: 'Report', icon: '📊' },
-  { key: 'DWSReminders', label: 'Reminder Settings', icon: '🔔' },
-  { key: 'DWSUsers', label: 'User Management', icon: '👥' },
+  { key: 'DWSReminders', label: 'Reminder Settings', icon: '🔔' }, // Admin only
+  { key: 'DWSUsers', label: 'User Management', icon: '👥' }, // Admin only
   { key: 'Dashboard', label: '← Back to Main', icon: '🏠' },
 ];
+
+/**
+ * Filter DWS menu items based on user role
+ */
+export const getFilteredDWSNav = (userRole: 'Super Admin' | 'Admin' | 'Manager' | 'Engineer' | null): MenuItem[] => {
+  // Default to Admin if no role is assigned (for backward compatibility)
+  if (!userRole || userRole === 'Super Admin' || userRole === 'Admin') {
+    return DAILY_WORK_STATUS_NAV; // Super Admin and Admin see everything
+  }
+  
+  if (userRole === 'Manager') {
+    // Manager sees: Dashboard, Daily Entry, Report
+    return DAILY_WORK_STATUS_NAV.filter(item => 
+      !['DWSMaster', 'DWSReminders', 'DWSUsers'].includes(item.key)
+    );
+  }
+  
+  // Engineer sees: Dashboard, Daily Entry
+  return DAILY_WORK_STATUS_NAV.filter(item => 
+    ['DWSDashboard', 'DWSDaily', 'Dashboard'].includes(item.key)
+  );
+};
+
 

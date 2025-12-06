@@ -32,7 +32,7 @@ import {
   deleteStatus
 } from '../../services/dailyWorkStatusService';
 import type { DWSProject, DWSPersonnel, DWSStatus } from '../../types/dailyWorkStatus';
-import { PROJECT_CATEGORIES } from '../../types/dailyWorkStatus';
+import { PROJECT_CATEGORIES, DEPARTMENTS, SYSTEM_ROLES } from '../../types/dailyWorkStatus';
 
 type MasterSubTab = 'projects' | 'personnel' | 'statuses';
 
@@ -57,9 +57,15 @@ export const DWSMasterDataTab: React.FC = () => {
   const [personnel, setPersonnel] = useState<DWSPersonnel[]>([]);
   const [newPersonName, setNewPersonName] = useState('');
   const [newPersonEmail, setNewPersonEmail] = useState('');
+  const [newPersonSystemRole, setNewPersonSystemRole] = useState<'Admin' | 'Manager' | 'Engineer' | ''>('');
+  const [newPersonDepartment, setNewPersonDepartment] = useState('');
+  const [newPersonReportsTo, setNewPersonReportsTo] = useState('');
   const [editingPersonId, setEditingPersonId] = useState<string | null>(null);
   const [editingPersonName, setEditingPersonName] = useState('');
   const [editingPersonEmail, setEditingPersonEmail] = useState('');
+  const [editingPersonSystemRole, setEditingPersonSystemRole] = useState<'Admin' | 'Manager' | 'Engineer' | ''>('');
+  const [editingPersonDepartment, setEditingPersonDepartment] = useState('');
+  const [editingPersonReportsTo, setEditingPersonReportsTo] = useState('');
 
   // Inject tooltip CSS for web
   useEffect(() => {
@@ -237,10 +243,16 @@ export const DWSMasterDataTab: React.FC = () => {
     try {
       await addPersonnel({ 
         name: newPersonName.trim(),
-        email: newPersonEmail.trim() || undefined
+        email: newPersonEmail.trim() || undefined,
+        systemRole: newPersonSystemRole || undefined,
+        department: newPersonDepartment || undefined,
+        reportsTo: newPersonReportsTo || undefined
       });
       setNewPersonName('');
       setNewPersonEmail('');
+      setNewPersonSystemRole('');
+      setNewPersonDepartment('');
+      setNewPersonReportsTo('');
       Alert.alert('Success', 'Person added successfully');
     } catch (error: any) {
       Alert.alert('Error', error.message);
@@ -256,11 +268,17 @@ export const DWSMasterDataTab: React.FC = () => {
     try {
       await updatePersonnel(id, { 
         name: editingPersonName.trim(),
-        email: editingPersonEmail.trim() || undefined
+        email: editingPersonEmail.trim() || undefined,
+        systemRole: editingPersonSystemRole || undefined,
+        department: editingPersonDepartment || undefined,
+        reportsTo: editingPersonReportsTo || undefined
       });
       setEditingPersonId(null);
       setEditingPersonName('');
       setEditingPersonEmail('');
+      setEditingPersonSystemRole('');
+      setEditingPersonDepartment('');
+      setEditingPersonReportsTo('');
       Alert.alert('Success', 'Person updated successfully');
     } catch (error: any) {
       Alert.alert('Error', error.message);
@@ -571,110 +589,293 @@ export const DWSMasterDataTab: React.FC = () => {
       <Text style={styles.sectionTitle}>👥 Assigned Personnel</Text>
       
       {/* Add Person Form */}
-      <View style={styles.inlineForm}>
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="Enter person name"
-          value={newPersonName}
-          onChangeText={setNewPersonName}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1, marginLeft: 8 }]}
-          placeholder="Enter email (optional)"
-          value={newPersonEmail}
-          onChangeText={setNewPersonEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TouchableOpacity 
-          style={styles.btnSuccess} 
-          onPress={handleAddPerson}
-          {...(Platform.OS === 'web' && { title: 'Add New Person' })}
-        >
-          <Text style={styles.btnText}>Add Person</Text>
-        </TouchableOpacity>
+      <View style={styles.form}>
+        <View style={styles.formRow}>
+          <TextInput
+            style={[styles.input, { flex: 2 }]}
+            placeholder="Enter person name *"
+            value={newPersonName}
+            onChangeText={setNewPersonName}
+          />
+          <TextInput
+            style={[styles.input, { flex: 2, marginLeft: 8 }]}
+            placeholder="Enter email (optional)"
+            value={newPersonEmail}
+            onChangeText={setNewPersonEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+        <View style={styles.formRow}>
+          {Platform.OS === 'web' ? (
+            <>
+              <select
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '6px',
+                  backgroundColor: '#fff',
+                  marginRight: 8
+                }}
+                value={newPersonSystemRole}
+                onChange={(e: any) => setNewPersonSystemRole(e.target.value)}
+              >
+                <option value="">Select Role</option>
+                {SYSTEM_ROLES.map((role) => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
+              </select>
+              <select
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '6px',
+                  backgroundColor: '#fff',
+                  marginRight: 8
+                }}
+                value={newPersonDepartment}
+                onChange={(e: any) => setNewPersonDepartment(e.target.value)}
+              >
+                <option value="">Select Department</option>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept.value} value={dept.value}>{dept.label}</option>
+                ))}
+              </select>
+              <select
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  fontSize: '14px',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '6px',
+                  backgroundColor: '#fff',
+                  marginRight: 8
+                }}
+                value={newPersonReportsTo}
+                onChange={(e: any) => setNewPersonReportsTo(e.target.value)}
+              >
+                <option value="">Reports To (optional)</option>
+                {personnel.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <>
+              <TextInput
+                style={[styles.input, { flex: 1, marginRight: 8 }]}
+                placeholder="Role"
+                value={newPersonSystemRole}
+                onChangeText={(text) => setNewPersonSystemRole(text as any)}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1, marginRight: 8 }]}
+                placeholder="Department"
+                value={newPersonDepartment}
+                onChangeText={setNewPersonDepartment}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1, marginRight: 8 }]}
+                placeholder="Reports To"
+                value={newPersonReportsTo}
+                onChangeText={setNewPersonReportsTo}
+              />
+            </>
+          )}
+          <TouchableOpacity 
+            style={styles.btnSuccess} 
+            onPress={handleAddPerson}
+            {...(Platform.OS === 'web' && { title: 'Add New Person' })}
+          >
+            <Text style={styles.btnText}>Add Person</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
       {/* Personnel Table */}
       <View style={styles.tableContainer}>
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Name</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Email</Text>
+          <Text style={[styles.tableHeaderCell, { width: 150 }]}>Name</Text>
+          <Text style={[styles.tableHeaderCell, { width: 180 }]}>Email</Text>
+          <Text style={[styles.tableHeaderCell, { width: 100 }]}>Role</Text>
+          <Text style={[styles.tableHeaderCell, { width: 120 }]}>Department</Text>
+          <Text style={[styles.tableHeaderCell, { width: 120 }]}>Reports To</Text>
           <Text style={[styles.tableHeaderCell, { width: 150 }]}>Actions</Text>
         </View>
-        {personnel.map((person) => (
-          <View key={person.id} style={styles.tableRow}>
-            {editingPersonId === person.id ? (
-              <>
-                <TextInput
-                  style={[styles.input, { flex: 1, marginRight: 8 }]}
-                  value={editingPersonName}
-                  onChangeText={setEditingPersonName}
-                  autoFocus
-                />
-                <TextInput
-                  style={[styles.input, { flex: 1.5, marginRight: 8 }]}
-                  value={editingPersonEmail}
-                  onChangeText={setEditingPersonEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholder="Enter email"
-                />
-              </>
-            ) : (
-              <>
-                <Text style={[styles.tableCell, { flex: 1 }]}>{person.name}</Text>
-                <Text style={[styles.tableCell, { flex: 1.5 }]}>{person.email || '-'}</Text>
-              </>
+        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+          <View style={{ minWidth: 920 }}>
+            {personnel.map((person) => (
+              <View key={person.id} style={styles.tableRow}>
+                {editingPersonId === person.id ? (
+                  <>
+                    <TextInput
+                      style={[styles.input, { width: 150, marginRight: 8 }]}
+                      value={editingPersonName}
+                      onChangeText={setEditingPersonName}
+                      autoFocus
+                    />
+                    <TextInput
+                      style={[styles.input, { width: 180, marginRight: 8 }]}
+                      value={editingPersonEmail}
+                      onChangeText={setEditingPersonEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      placeholder="Enter email"
+                    />
+                    {Platform.OS === 'web' ? (
+                      <>
+                        <select
+                          style={{
+                            width: 100,
+                            padding: '8px',
+                            fontSize: '14px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '4px',
+                            marginRight: 8
+                          }}
+                          value={editingPersonSystemRole}
+                          onChange={(e: any) => setEditingPersonSystemRole(e.target.value)}
+                        >
+                          <option value="">Role</option>
+                          {SYSTEM_ROLES.map((role) => (
+                            <option key={role.value} value={role.value}>{role.label}</option>
+                          ))}
+                        </select>
+                        <select
+                          style={{
+                            width: 120,
+                            padding: '8px',
+                            fontSize: '14px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '4px',
+                            marginRight: 8
+                          }}
+                          value={editingPersonDepartment}
+                          onChange={(e: any) => setEditingPersonDepartment(e.target.value)}
+                        >
+                          <option value="">Department</option>
+                          {DEPARTMENTS.map((dept) => (
+                            <option key={dept.value} value={dept.value}>{dept.label}</option>
+                          ))}
+                        </select>
+                        <select
+                          style={{
+                            width: 120,
+                            padding: '8px',
+                            fontSize: '14px',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '4px',
+                            marginRight: 8
+                          }}
+                          value={editingPersonReportsTo}
+                          onChange={(e: any) => setEditingPersonReportsTo(e.target.value)}
+                        >
+                          <option value="">Reports To</option>
+                          {personnel.filter(p => p.id !== person.id).map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </>
+                    ) : (
+                      <>
+                        <TextInput
+                          style={[styles.input, { width: 100, marginRight: 8 }]}
+                          placeholder="Role"
+                          value={editingPersonSystemRole}
+                          onChangeText={(text) => setEditingPersonSystemRole(text as any)}
+                        />
+                        <TextInput
+                          style={[styles.input, { width: 120, marginRight: 8 }]}
+                          placeholder="Dept"
+                          value={editingPersonDepartment}
+                          onChangeText={setEditingPersonDepartment}
+                        />
+                        <TextInput
+                          style={[styles.input, { width: 120, marginRight: 8 }]}
+                          placeholder="Reports To"
+                          value={editingPersonReportsTo}
+                          onChangeText={setEditingPersonReportsTo}
+                        />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Text style={[styles.tableCell, { width: 150 }]}>{person.name}</Text>
+                    <Text style={[styles.tableCell, { width: 180 }]}>{person.email || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: 100 }]}>{person.systemRole || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: 120 }]}>
+                      {person.department ? DEPARTMENTS.find(d => d.value === person.department)?.label || person.department : '-'}
+                    </Text>
+                    <Text style={[styles.tableCell, { width: 120 }]}>
+                      {person.reportsTo ? personnel.find(p => p.id === person.reportsTo)?.name || '-' : '-'}
+                    </Text>
+                  </>
+                )}
+                <View style={[styles.tableCell, styles.actionsCell, { width: 150 }]}>
+                  {editingPersonId === person.id ? (
+                    <>
+                      <TouchableOpacity 
+                        style={styles.btnEdit} 
+                        onPress={() => handleUpdatePerson(person.id)}
+                        {...(Platform.OS === 'web' && { title: 'Save Changes' })}
+                      >
+                        <Text style={styles.btnSmText}>Save</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.btnCancel} 
+                        onPress={() => {
+                          setEditingPersonId(null);
+                          setEditingPersonName('');
+                          setEditingPersonEmail('');
+                          setEditingPersonSystemRole('');
+                          setEditingPersonDepartment('');
+                          setEditingPersonReportsTo('');
+                        }}
+                        {...(Platform.OS === 'web' && { title: 'Cancel Editing' })}
+                      >
+                        <Text style={styles.btnSmText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity 
+                        style={styles.btnEdit} 
+                        onPress={() => {
+                          setEditingPersonId(person.id);
+                          setEditingPersonName(person.name);
+                          setEditingPersonEmail(person.email || '');
+                          setEditingPersonSystemRole(person.systemRole || '');
+                          setEditingPersonDepartment(person.department || '');
+                          setEditingPersonReportsTo(person.reportsTo || '');
+                        }}
+                        {...(Platform.OS === 'web' && { title: 'Edit Person' })}
+                      >
+                        <Text style={styles.btnSmText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.btnDelete} 
+                        onPress={() => handleDeletePerson(person.id)}
+                        {...(Platform.OS === 'web' && { title: 'Delete Person' })}
+                      >
+                        <Text style={styles.btnSmText}>Delete</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </View>
+            ))}
+            {personnel.length === 0 && (
+              <View style={styles.emptyRow}>
+                <Text style={styles.emptyText}>No personnel added yet</Text>
+              </View>
             )}
-            <View style={[styles.tableCell, styles.actionsCell, { width: 150 }]}>
-              {editingPersonId === person.id ? (
-                <>
-                  <TouchableOpacity 
-                    style={styles.btnEdit} 
-                    onPress={() => handleUpdatePerson(person.id)}
-                    {...(Platform.OS === 'web' && { title: 'Save Changes' })}
-                  >
-                    <Text style={styles.btnSmText}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.btnCancel} 
-                    onPress={() => setEditingPersonId(null)}
-                    {...(Platform.OS === 'web' && { title: 'Cancel Editing' })}
-                  >
-                    <Text style={styles.btnSmText}>Cancel</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity 
-                    style={styles.btnEdit} 
-                    onPress={() => {
-                      setEditingPersonId(person.id);
-                      setEditingPersonName(person.name);
-                      setEditingPersonEmail(person.email || '');
-                    }}
-                    {...(Platform.OS === 'web' && { title: 'Edit Person' })}
-                  >
-                    <Text style={styles.btnSmText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.btnDelete} 
-                    onPress={() => handleDeletePerson(person.id)}
-                    {...(Platform.OS === 'web' && { title: 'Delete Person' })}
-                  >
-                    <Text style={styles.btnSmText}>Delete</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
           </View>
-        ))}
-        {personnel.length === 0 && (
-          <View style={styles.emptyRow}>
-            <Text style={styles.emptyText}>No personnel added yet</Text>
-          </View>
-        )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -907,6 +1108,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     marginTop: spacing.md
+  },
+  form: {
+    marginBottom: spacing.lg
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+    alignItems: 'center'
   },
   inlineForm: {
     flexDirection: 'row',

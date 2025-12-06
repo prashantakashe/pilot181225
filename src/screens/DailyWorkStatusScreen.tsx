@@ -3,8 +3,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 import { AppLayout } from '../components/AppLayout';
-import { DAILY_WORK_STATUS_NAV } from '../constants/sidebarMenus';
+import { getFilteredDWSNav } from '../constants/sidebarMenus';
 import { userService } from '../services/userService';
+import { dailyWorkStatusService } from '../services/dailyWorkStatusService';
+import { getUserRole } from '../utils/permissions';
+import type { DWSPersonnel } from '../types/dailyWorkStatus';
 import {
   DWSMasterDataTab,
   DWSDailyEntryTab,
@@ -15,6 +18,7 @@ import {
 } from '../components/dailyWorkStatus';
 
 type DWSTab = 'DWSMaster' | 'DWSDaily' | 'DWSReport' | 'DWSDashboard' | 'DWSUsers' | 'DWSReminders';
+type SystemRole = 'Super Admin' | 'Admin' | 'Manager' | 'Engineer' | null;
 
 interface DailyWorkStatusScreenProps {
   navigation: any;
@@ -28,6 +32,8 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const [userName, setUserName] = useState('User');
   const [activeTab, setActiveTab] = useState<DWSTab>('DWSDashboard');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [userRole, setUserRole] = useState<SystemRole>(null);
+  const [personnel, setPersonnel] = useState<DWSPersonnel[]>([]);
   const { user, signOut } = useContext(AuthContext)!;
 
   useEffect(() => {
@@ -48,6 +54,17 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
         })
         .catch(console.error);
     }
+
+    // Subscribe to personnel to get user role
+    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel((personnelList) => {
+      setPersonnel(personnelList);
+      if (user?.email) {
+        const role = getUserRole(user.email, personnelList);
+        setUserRole(role);
+      }
+    });
+
+    return () => unsubPersonnel();
   }, [user]);
 
   // Handle sidebar navigation
@@ -107,7 +124,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
     <AppLayout 
       title={getTitle()}
       activeRoute={activeTab}
-      sidebarItems={DAILY_WORK_STATUS_NAV}
+      sidebarItems={getFilteredDWSNav(userRole)}
       onSidebarItemPress={handleSidebarPress}
     >
       <View style={styles.container}>
