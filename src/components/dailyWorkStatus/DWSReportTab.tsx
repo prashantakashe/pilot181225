@@ -1967,6 +1967,8 @@ export const DWSReportTab: React.FC = () => {
         reportDate: formatDateDDMMYYYY(tomorrow),
         startingTomorrow: startingTomorrow.map(entry => ({
           ...entry,
+          startDateFormatted: entry.startDate ? formatDateDDMMYYYY(new Date(entry.startDate)) : '',
+          targetDateFormatted: entry.targetDate ? formatDateDDMMYYYY(new Date(entry.targetDate)) : '',
           priority: entry.targetDate ? 
             (new Date(entry.targetDate) < new Date() ? 'High' : 'Normal') : 
             'Normal'
@@ -1981,6 +1983,8 @@ export const DWSReportTab: React.FC = () => {
           
           return {
             ...entry,
+            startDateFormatted: entry.startDate ? formatDateDDMMYYYY(new Date(entry.startDate)) : '',
+            targetDateFormatted: entry.targetDate ? formatDateDDMMYYYY(new Date(entry.targetDate)) : '',
             daysSinceStart,
             daysUntilTarget,
             urgency: daysUntilTarget !== null && daysUntilTarget < 3 ? 'Urgent' : 'Normal'

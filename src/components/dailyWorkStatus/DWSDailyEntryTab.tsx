@@ -18,6 +18,7 @@ import {
   Modal,
   Pressable
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -302,12 +303,27 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         /* Make table header sticky */
         .dws-table-scroll {
           position: relative;
+          overflow-y: auto;
+        }
+        .dws-table-container {
+          position: relative;
+          overflow: visible !important;
         }
         .dws-table-header {
           position: sticky !important;
           top: 0 !important;
           z-index: 100 !important;
           background-color: #2563EB !important;
+        }
+        
+        /* Action menu button hover */
+        .action-menu-btn:hover {
+          background-color: rgba(100, 116, 139, 0.1);
+        }
+        
+        /* Menu item hover */
+        .menu-item:hover {
+          background-color: rgba(59, 130, 246, 0.08);
         }
         
         /* Tooltip styles */
@@ -710,51 +726,50 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
       <Text style={styles.pageTitle}>📝 Daily Entry - Log Activities</Text>
       
       {/* Filters */}
-      <View style={styles.filterRow}>
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter Project"
-          value={filterProject}
-          onChangeText={setFilterProject}
-        />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter Date/Time"
-          value={filterDate}
-          onChangeText={setFilterDate}
-        />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter Activity"
-          value={filterActivity}
-          onChangeText={setFilterActivity}
-        />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter Assigned"
-          value={filterAssigned}
-          onChangeText={setFilterAssigned}
-        />
-        <View style={styles.filterPickerContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.filterCard}>
+        <View style={styles.filterSingleRow}>
+          <TextInput
+            style={styles.filterInputCompact}
+            placeholder="Project"
+            value={filterProject}
+            onChangeText={setFilterProject}
+          />
+          <TextInput
+            style={styles.filterInputCompact}
+            placeholder="Date/Time"
+            value={filterDate}
+            onChangeText={setFilterDate}
+          />
+          <TextInput
+            style={styles.filterInputCompact}
+            placeholder="Activity"
+            value={filterActivity}
+            onChangeText={setFilterActivity}
+          />
+          <TextInput
+            style={styles.filterInputCompact}
+            placeholder="Assigned"
+            value={filterAssigned}
+            onChangeText={setFilterAssigned}
+          />
+          <View style={styles.filterDivider} />
+          <TouchableOpacity
+            style={[styles.filterStatusBtnCompact, !filterStatus && styles.filterStatusBtnActive]}
+            onPress={() => setFilterStatus('')}
+          >
+            <Text style={[styles.filterStatusTextCompact, !filterStatus && styles.filterStatusTextActive]}>All</Text>
+          </TouchableOpacity>
+          {statuses.map(status => (
             <TouchableOpacity
-              style={[styles.filterChip, !filterStatus && styles.filterChipActive]}
-              onPress={() => setFilterStatus('')}
+              key={status.id}
+              style={[styles.filterStatusBtnCompact, filterStatus === status.name && styles.filterStatusBtnActive]}
+              onPress={() => setFilterStatus(status.name)}
             >
-              <Text style={[styles.filterChipText, !filterStatus && styles.filterChipTextActive]}>All</Text>
+              <Text style={[styles.filterStatusTextCompact, filterStatus === status.name && styles.filterStatusTextActive]}>
+                {status.name}
+              </Text>
             </TouchableOpacity>
-            {statuses.map(status => (
-              <TouchableOpacity
-                key={status.id}
-                style={[styles.filterChip, filterStatus === status.name && styles.filterChipActive]}
-                onPress={() => setFilterStatus(status.name)}
-              >
-                <Text style={[styles.filterChipText, filterStatus === status.name && styles.filterChipTextActive]}>
-                  {status.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          ))}
         </View>
       </View>
       
@@ -765,7 +780,10 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         {...(Platform.OS === 'web' ? { className: 'dws-table-scroll' } : {})}
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View style={styles.tableContainer}>
+          <View 
+            style={styles.tableContainer}
+            {...(Platform.OS === 'web' ? { className: 'dws-table-container' } : {})}
+          >
             {/* Header */}
             <View 
               style={styles.tableHeader}
@@ -1018,90 +1036,62 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                   
                   {/* Actions */}
                   <View style={[styles.cell, styles.actionsCell, { width: 80 }]}>
-                    {Platform.OS === 'web' ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                        <button 
-                          style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#2563EB',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onClick={(e: any) => {
-                            e.stopPropagation();
-                            handleAddStatusUpdate(entry.id);
-                          }}
-                          title="Add Status Update"
-                        >
-                          + Status
-                        </button>
-                        <button 
-                          style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#10B981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onClick={(e: any) => {
-                            console.log('[DWS] + Sub button clicked for entry:', entry.id);
-                            e.stopPropagation();
-                            handleAddSubActivity(entry.id);
-                          }}
-                          title="Add Sub Activity"
-                        >
-                          + Sub
-                        </button>
-                        <button 
-                          style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#EF4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            cursor: 'pointer'
-                          }}
-                          onClick={(e: any) => {
-                            e.stopPropagation();
-                            handleDeleteEntry(entry.id);
-                          }}
-                          title="Delete Entry"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <TouchableOpacity 
-                          style={styles.actionBtn}
-                          onPress={() => handleAddStatusUpdate(entry.id)}
-                        >
-                          <Text style={styles.actionBtnText}>+ Status</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                          style={[styles.actionBtn, styles.actionBtnSuccess]}
-                          onPress={() => handleAddSubActivity(entry.id)}
-                        >
-                          <Text style={styles.actionBtnText}>+ Sub</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                          style={[styles.actionBtn, styles.actionBtnDanger]}
-                          onPress={() => handleDeleteEntry(entry.id)}
-                        >
-                          <Text style={styles.actionBtnText}>🗑️</Text>
-                        </TouchableOpacity>
-                      </>
-                    )}
+                    <View>
+                      <TouchableOpacity 
+                        style={styles.actionMenuBtn}
+                        onPress={() => {
+                          setOpenMenuId(openMenuId === entry.id ? null : entry.id);
+                        }}
+                      >
+                        <MaterialCommunityIcons name="dots-vertical" size={24} color="#64748B" />
+                      </TouchableOpacity>
+                      
+                      {openMenuId === entry.id && (
+                        <>
+                          <Pressable 
+                            style={styles.menuBackdrop}
+                            onPress={() => setOpenMenuId(null)}
+                          />
+                          <View style={index === 0 ? styles.actionMenuBelow : styles.actionMenuAbove}>
+                            <TouchableOpacity 
+                              style={styles.menuItem}
+                              onPress={() => {
+                                setOpenMenuId(null);
+                                handleAddStatusUpdate(entry.id);
+                              }}
+                            >
+                              <MaterialCommunityIcons name="clipboard-text" size={16} color="#3B82F6" />
+                              <Text style={styles.menuItemText}>Add Status Update</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                              style={styles.menuItem}
+                              onPress={() => {
+                                console.log('[DWS] + Sub button clicked for entry:', entry.id);
+                                setOpenMenuId(null);
+                                handleAddSubActivity(entry.id);
+                              }}
+                            >
+                              <MaterialCommunityIcons name="plus-circle" size={16} color="#10B981" />
+                              <Text style={styles.menuItemText}>Add Sub Activity</Text>
+                            </TouchableOpacity>
+                            
+                            <View style={styles.menuDivider} />
+                            
+                            <TouchableOpacity 
+                              style={styles.menuItem}
+                              onPress={() => {
+                                setOpenMenuId(null);
+                                handleDeleteEntry(entry.id);
+                              }}
+                            >
+                              <MaterialCommunityIcons name="delete" size={16} color="#EF4444" />
+                              <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Delete Entry</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </>
+                      )}
+                    </View>
                   </View>
                   
                   {/* Hours */}
@@ -1445,63 +1435,50 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                     
                     {/* Actions */}
                     <View style={[styles.cell, styles.actionsCell, { width: 80 }]}>
-                      {Platform.OS === 'web' ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                          <button 
-                            style={{
-                              padding: '4px 8px',
-                              backgroundColor: '#2563EB',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: '500',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap'
-                            }}
-                            onClick={(e: any) => {
-                              e.stopPropagation();
-                              handleAddSubActivityStatusUpdate(entry.id, sub.id);
-                            }}
-                            title="Add Status Update"
-                          >
-                            + Status
-                          </button>
-                          <button 
-                            style={{
-                              padding: '4px 8px',
-                              backgroundColor: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={(e: any) => {
-                              e.stopPropagation();
-                              handleDeleteSubActivity(entry.id, sub.id);
-                            }}
-                            title="Delete Sub Activity"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <TouchableOpacity 
-                            style={styles.actionBtn}
-                            onPress={() => handleAddSubActivityStatusUpdate(entry.id, sub.id)}
-                          >
-                            <Text style={styles.actionBtnText}>+ Status</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
-                            style={[styles.actionBtn, styles.actionBtnDanger]}
-                            onPress={() => handleDeleteSubActivity(entry.id, sub.id)}
-                          >
-                            <Text style={styles.actionBtnText}>🗑️</Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
+                      <View>
+                        <TouchableOpacity 
+                          style={styles.actionMenuBtn}
+                          onPress={() => {
+                            setOpenMenuId(openMenuId === `${entry.id}-${sub.id}` ? null : `${entry.id}-${sub.id}`);
+                          }}
+                        >
+                          <MaterialCommunityIcons name="dots-vertical" size={24} color="#64748B" />
+                        </TouchableOpacity>
+                        
+                        {openMenuId === `${entry.id}-${sub.id}` && (
+                          <>
+                            <Pressable 
+                              style={styles.menuBackdrop}
+                              onPress={() => setOpenMenuId(null)}
+                            />
+                            <View style={styles.actionMenuAbove}>
+                              <TouchableOpacity 
+                                style={styles.menuItem}
+                                onPress={() => {
+                                  setOpenMenuId(null);
+                                  handleAddSubActivityStatusUpdate(entry.id, sub.id);
+                                }}
+                              >
+                                <MaterialCommunityIcons name="clipboard-text" size={16} color="#3B82F6" />
+                                <Text style={styles.menuItemText}>Add Status Update</Text>
+                              </TouchableOpacity>
+                              
+                              <View style={styles.menuDivider} />
+                              
+                              <TouchableOpacity 
+                                style={styles.menuItem}
+                                onPress={() => {
+                                  setOpenMenuId(null);
+                                  handleDeleteSubActivity(entry.id, sub.id);
+                                }}
+                              >
+                                <MaterialCommunityIcons name="delete" size={16} color="#EF4444" />
+                                <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Delete Sub Activity</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </>
+                        )}
+                      </View>
                     </View>
                     
                     {/* Hours */}
@@ -1695,23 +1672,106 @@ const styles = StyleSheet.create({
     color: colors.TEXT_PRIMARY,
     padding: spacing.lg
   },
+  filterCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    ...Platform.select({
+      web: { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' }
+    })
+  },
+  filterSingleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flexWrap: 'wrap'
+  },
+  filterInputCompact: {
+    flex: 1,
+    minWidth: 120,
+    maxWidth: 180,
+    height: 32,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 4,
+    paddingHorizontal: spacing.xs,
+    fontSize: 13,
+    backgroundColor: '#FFFFFF'
+  },
+  filterDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: spacing.xs
+  },
+  filterStatusBtnCompact: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 32,
+    justifyContent: 'center'
+  },
+  filterStatusTextCompact: {
+    fontSize: 13,
+    color: '#374151',
+    fontWeight: '500'
+  },
+  filterInputRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm
+  },
+  filterInput: {
+    flex: 1,
+    minWidth: 150,
+    height: 36,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 4,
+    paddingHorizontal: spacing.sm,
+    fontSize: 14,
+    backgroundColor: '#FFFFFF'
+  },
+  filterStatusRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    flexWrap: 'wrap'
+  },
+  filterStatusBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    minWidth: 80,
+    alignItems: 'center'
+  },
+  filterStatusBtnActive: {
+    backgroundColor: colors.ACTION_BLUE,
+    borderColor: colors.ACTION_BLUE
+  },
+  filterStatusText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500'
+  },
+  filterStatusTextActive: {
+    color: '#FFFFFF'
+  },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md
-  },
-  filterInput: {
-    flex: 1,
-    minWidth: 120,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    fontSize: 14,
-    backgroundColor: '#fff'
   },
   filterPickerContainer: {
     minWidth: 150
@@ -1744,6 +1804,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     width: 1130,
+    overflow: 'visible',
     ...Platform.select({
       web: { boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }
     })
@@ -1756,7 +1817,7 @@ const styles = StyleSheet.create({
       web: {
         position: 'sticky',
         top: 0,
-        zIndex: 10
+        zIndex: 100
       }
     })
   },
@@ -1773,7 +1834,8 @@ const styles = StyleSheet.create({
     minHeight: 60,
     alignItems: 'flex-start',
     paddingVertical: spacing.sm,
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    overflow: 'visible'
   },
   alternateRow: {
     backgroundColor: '#F9FAFB'
@@ -1798,7 +1860,10 @@ const styles = StyleSheet.create({
   actionsCell: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4
+    gap: 4,
+    position: 'relative',
+    zIndex: 10001,
+    overflow: 'visible'
   },
   actionBtn: {
     backgroundColor: colors.ACTION_BLUE,
@@ -1931,5 +1996,143 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '300',
     marginTop: -2
+  },
+  actionMenuBtn: {
+    padding: 4,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: { 
+        cursor: 'pointer',
+        transition: 'background-color 0.2s'
+      }
+    })
+  },
+  menuBackdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99998,
+    ...Platform.select({
+      web: { 
+        position: 'fixed' as any
+      },
+      default: {
+        position: 'absolute'
+      }
+    })
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)'
+  },
+  actionMenu: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    minWidth: 200,
+    padding: 8,
+    ...Platform.select({
+      web: { 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5
+      }
+    })
+  },
+  actionMenuAbove: {
+    position: 'absolute',
+    bottom: 35,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    minWidth: 180,
+    padding: 4,
+    zIndex: 99999,
+    ...Platform.select({
+      web: { 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        elevation: 10
+      }
+    })
+  },
+  actionMenuBelow: {
+    position: 'absolute',
+    top: 35,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    minWidth: 180,
+    padding: 4,
+    zIndex: 99999,
+    ...Platform.select({
+      web: { 
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        elevation: 10
+      }
+    })
+  },
+  actionMenuPositioned: {
+    position: 'absolute',
+    top: 40,
+    right: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    minWidth: 200,
+    padding: 8,
+    ...Platform.select({
+      web: { 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5
+      }
+    })
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 4,
+    gap: 8,
+    ...Platform.select({
+      web: { 
+        cursor: 'pointer',
+        transition: 'background-color 0.15s'
+      }
+    })
+  },
+  menuItemText: {
+    fontSize: 13,
+    color: '#1F2937',
+    fontWeight: '500'
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 2
   }
 });

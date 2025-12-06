@@ -16,8 +16,9 @@ import {
   DWSUserManagementTab,
   DWSReminderSettingsTab
 } from '../components/dailyWorkStatus';
+import { DWSNotificationSettings } from '../components/dailyWorkStatus/DWSNotificationSettings';
 
-type DWSTab = 'DWSMaster' | 'DWSDaily' | 'DWSReport' | 'DWSDashboard' | 'DWSUsers' | 'DWSReminders';
+type DWSTab = 'DWSMaster' | 'DWSDaily' | 'DWSReport' | 'DWSDashboard' | 'DWSUsers' | 'DWSReminders' | 'DWSNotifications';
 type SystemRole = 'Super Admin' | 'Admin' | 'Manager' | 'Engineer' | null;
 
 interface DailyWorkStatusScreenProps {
@@ -98,6 +99,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       case 'DWSDashboard': return 'Daily Work Status - Dashboard';
       case 'DWSUsers': return 'Daily Work Status - User Management';
       case 'DWSReminders': return 'Daily Work Status - Reminder Settings';
+      case 'DWSNotifications': return 'Daily Work Status - Notifications';
       default: return 'Daily Work Status';
     }
   };
@@ -124,6 +126,8 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
         return <DWSUserManagementTab />;
       case 'DWSReminders':
         return <DWSReminderSettingsTab />;
+      case 'DWSNotifications':
+        return <DWSNotificationSettings />;
       default:
         return <DWSMasterDataTab />;
     }

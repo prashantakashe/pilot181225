@@ -59,7 +59,8 @@ export const DAILY_WORK_STATUS_NAV: MenuItem[] = [
   { key: 'DWSDaily', label: 'Daily Entry', icon: '📝' },
   { key: 'DWSMaster', label: 'Master Data', icon: '📁' }, // Admin only
   { key: 'DWSReport', label: 'Report', icon: '📊' },
-  { key: 'DWSReminders', label: 'Reminder Settings', icon: '🔔' }, // Admin only
+  { key: 'DWSNotifications', label: 'Notifications', icon: '🔔' },
+  { key: 'DWSReminders', label: 'Reminder Settings', icon: '⏰' }, // Admin only
   { key: 'DWSUsers', label: 'User Management', icon: '👥' }, // Admin only
   { key: 'Dashboard', label: '← Back to Main', icon: '🏠' },
 ];
