@@ -178,66 +178,117 @@ const dropdownStyles = StyleSheet.create({
     fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
-  optionTextSelected: {
-    fontWeight: '600',
-    color: colors.ACTION_BLUE
-  },
-  checkmark: {
-    fontSize: 16,
-    color: colors.ACTION_BLUE,
-    fontWeight: '700'
-  },
-  emptyState: {
-    padding: 24,
-    alignItems: 'center'
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.TEXT_SECONDARY,
-    fontStyle: 'italic'
-  }
-});
+                </Text>
+              </View>
 
-interface DWSDailyEntryTabProps {
-  initialFilter?: string;
-}
-
-export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilter }) => {
-          // Tooltip state for Add New Entry button (web)
-          const [showAddTooltip, setShowAddTooltip] = useState(false);
-        // Helper to format date as DD/MM/YYYY
-        function formatDateTime(dateTimeStr: string) {
-          const dateObj = new Date(dateTimeStr);
-          if (isNaN(dateObj.getTime())) return dateTimeStr;
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const year = dateObj.getFullYear();
-          const time = dateObj.toLocaleTimeString();
-          return `${day}/${month}/${year}, ${time}`;
-        }
-      // Inject web-specific CSS for horizontal wrapping of status cards (only once)
-      useEffect(() => {
-        if (Platform.OS === 'web' && typeof document !== 'undefined') {
-          const styleId = 'dws-status-row-web-style';
-          if (!document.getElementById(styleId)) {
-            const style = document.createElement('style');
-            style.id = styleId;
-            style.innerHTML = `
-              .dws-status-row-web {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                width: 880px !important;
-                align-items: flex-start !important;
-                gap: 12px !important;
-                margin-top: 8px !important;
-                margin-bottom: 4px !important;
-              }
-              .dws-status-row-web > div {
-                background: #FFF3CD;
-                padding: 12px;
-                border-left: 3px solid #FFC107;
-                border-radius: 4px;
+              {/* Actions */}
+              <View style={[styles.cell, styles.actionsCell, { width: 80, position: 'relative', zIndex: 100 }]}> 
+                    {Platform.OS === 'web' ? (
+                      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <button
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: 22,
+                            padding: 0,
+                            color: '#222',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Actions"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === entry.id ? null : entry.id);
+                          }}
+                          onMouseEnter={e => {
+                            setOpenMenuId(entry.id);
+                          }}
+                          onMouseLeave={e => {
+                            setTimeout(() => {
+                              if (openMenuId === entry.id) setOpenMenuId(null);
+                            }, 300);
+                          }}
+                        >
+                          <span style={{ fontWeight: 'bold', fontSize: 22, letterSpacing: 2 }}>⋯</span>
+                        </button>
+                        {openMenuId === entry.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 30,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              background: '#fff',
+                              border: '1px solid #E5E7EB',
+                              borderRadius: 8,
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+                              zIndex: 9999,
+                              minWidth: 120,
+                              padding: '6px 0',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'stretch',
+                            }}
+                            onMouseLeave={() => setOpenMenuId(null)}
+                          >
+                            <button
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#2563EB',
+                                padding: '8px 16px',
+                                textAlign: 'left',
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                width: '100%',
+                              }}
+                              onClick={() => { setOpenMenuId(null); handleAddStatusUpdate(entry.id); }}
+                            >+ Status</button>
+                            <button
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#28a745',
+                                padding: '8px 16px',
+                                textAlign: 'left',
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                width: '100%',
+                              }}
+                              onClick={() => { setOpenMenuId(null); handleAddSubActivity(entry.id); }}
+                            >+ Sub</button>
+                            <button
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#dc3545',
+                                padding: '8px 16px',
+                                textAlign: 'left',
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                width: '100%',
+                              }}
+                              onClick={() => { setOpenMenuId(null); handleDeleteEntry(entry.id); }}
+                            >🗑️ Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#2563EB' }]} onPress={() => handleAddStatusUpdate(entry.id)}>
+                          <Text style={styles.actionButtonText}>+ Status</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#28a745' }]} onPress={() => handleAddSubActivity(entry.id)}>
+                          <Text style={styles.actionButtonText}>+ Sub</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#dc3545' }]} onPress={() => handleDeleteEntry(entry.id)}>
+                          <Text style={styles.actionButtonText}>🗑️</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
                 min-width: 270px;
                 max-width: 280px;
                 flex: 1 1 270px;
@@ -713,7 +764,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
       <Text style={styles.pageTitle}>📝 Daily Entry - Log Activities</Text>
       
       {/* Filters */}
-      <View style={[styles.filterRow, { alignItems: 'center', position: 'relative' }]}> 
+      <View style={styles.filterRow}>
         {/* Show Only Today's Updates Checkbox */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
           {Platform.OS === 'web' ? (
@@ -743,21 +794,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
             </TouchableOpacity>
           )}
           <Text style={{ fontSize: 13, color: '#222' }}>Show only today's updates</Text>
-          {showTodayOnly && (
-            <Text style={{
-              marginLeft: 8,
-              fontSize: 12,
-              color: '#2563EB',
-              backgroundColor: '#E3EDFB',
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-              fontWeight: 'bold',
-              alignSelf: 'center',
-            }}>
-              {filteredEntries.length}
-            </Text>
-          )}
         </View>
         <TextInput
           style={styles.filterInput}
@@ -1335,14 +1371,14 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                 {entry.subActivities?.map((sub) => (
                   <View key={sub.id} style={[styles.tableRow, styles.subRow]}>
                     <View style={[styles.cell, { width: 150 }]} />
-                    <View style={[styles.cell, { width: 100 }]} />
-                    
-                    {/* Sub Activity Description */}
-                    <View style={[styles.cell, { width: 250 }]}>
+                    <Text style={[styles.cellText, { color: colors.TEXT_PRIMARY }]}> 
+                      {entry.site_location || '-'}
+                    </Text>
+                  </View>
+
+                  {/* Actions */}
+                    <View style={[styles.cell, styles.actionsCell, { width: 80, position: 'relative', zIndex: 100 }]}> 
                       {Platform.OS === 'web' ? (
-                        <textarea
-                          style={{
-                            width: '100%',
                             minHeight: '36px',
                             padding: '6px 8px',
                             border: '1px solid #E5E7EB',
