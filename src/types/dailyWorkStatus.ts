@@ -24,10 +24,6 @@ export interface DWSPersonnel {
   role?: string;
   email?: string;
   phone?: string;
-  // New fields for reporting hierarchy
-  systemRole?: 'Super Admin' | 'Admin' | 'Manager' | 'Engineer';
-  department?: string;
-  reportsTo?: string; // ID of personnel this person reports to
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -105,22 +101,6 @@ export interface DWSDashboardMetrics {
   notStartedActivities: number;
 }
 
-// Report Settings for automated reporting
-export interface DWSReportSettings {
-  id: string;
-  reportType: 'daily-summary' | 'tomorrows-activities' | 'delay-report' | 'workload-distribution';
-  reportName: string;
-  enabled: boolean;
-  recipients: string[]; // Array of email addresses
-  scheduleTime: string; // Format: "HH:MM" (24-hour)
-  format: 'email' | 'pdf' | 'both';
-  frequency?: 'daily' | 'weekly' | 'monthly';
-  lastSent?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: string;
-}
-
 // Category options for projects
 export const PROJECT_CATEGORIES = [
   { value: 'development', label: 'Development' },
@@ -130,34 +110,6 @@ export const PROJECT_CATEGORIES = [
   { value: 'maintenance', label: 'Maintenance' },
   { value: 'other', label: 'Other' }
 ];
-
-// Department options
-export const DEPARTMENTS = [
-  { value: 'tendering', label: 'Tendering' },
-  { value: 'hr', label: 'HR' },
-  { value: 'accounts', label: 'Accounts' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'engineering', label: 'Engineering' },
-  { value: 'construction', label: 'Construction' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'other', label: 'Other' }
-];
-
-// System Role options (can be customized via Master Data)
-export const SYSTEM_ROLES = [
-  { value: 'Super Admin', label: 'Super Admin' },
-  { value: 'Admin', label: 'Admin' },
-  { value: 'Manager', label: 'Manager' },
-  { value: 'Engineer', label: 'Engineer' }
-];
-
-// Role hierarchy for access control
-export const ROLE_HIERARCHY: Record<string, number> = {
-  'Super Admin': 4,
-  'Admin': 3,
-  'Manager': 2,
-  'Engineer': 1
-};
 
 // Default status options
 export const DEFAULT_STATUSES = [

@@ -84,39 +84,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     return !Object.values(newErrors).some((err) => err);
   };
 
-  // Real-time validation effect
-  React.useEffect(() => {
-    if (fullName || email || password || confirmPassword) {
-      const newErrors = {
-        fullName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-      };
-
-      if (fullName && !validateFullName(fullName)) {
-        newErrors.fullName = 'Please enter a valid full name (at least 2 characters)';
-      }
-
-      if (email && !validateEmail(email)) {
-        newErrors.email = 'Please enter a valid email address';
-      }
-
-      if (password) {
-        const passwordValidation = validatePassword(password);
-        if (!passwordValidation.valid) {
-          newErrors.password = passwordValidation.message;
-        }
-      }
-
-      if (confirmPassword && password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      }
-
-      setErrors(newErrors);
-    }
-  }, [fullName, email, password, confirmPassword]);
-
   const handleSignUp = async () => {
     if (!validateForm()) {
       return;
@@ -125,24 +92,15 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       await authService.signUp(email.trim(), password, fullName.trim());
-      // Sign out the user immediately after sign up to prevent auto-login
-      await authService.signOut();
-      
-      // Keep loading true to prevent flash
       Alert.alert(
         'Account Created',
-        'Your account has been created successfully. Please sign in with your credentials.',
-        [{ 
-          text: 'OK', 
-          onPress: () => {
-            navigation.replace('Login');
-            setLoading(false);
-          }
-        }]
+        'Please check your email to verify your account.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (error: any) {
       const friendlyError = mapFirebaseError(error.code);
       Alert.alert('Sign Up Failed', friendlyError);
+    } finally {
       setLoading(false);
     }
   };

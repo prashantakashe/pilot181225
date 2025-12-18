@@ -3,11 +3,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AuthContext } from '../contexts/AuthContext';
 import { AppLayout } from '../components/AppLayout';
-import { getFilteredDWSNav } from '../constants/sidebarMenus';
+import { DAILY_WORK_STATUS_NAV } from '../constants/sidebarMenus';
 import { userService } from '../services/userService';
-import { dailyWorkStatusService } from '../services/dailyWorkStatusService';
-import { getUserRole } from '../utils/permissions';
-import type { DWSPersonnel } from '../types/dailyWorkStatus';
 import {
   DWSMasterDataTab,
   DWSDailyEntryTab,
@@ -16,10 +13,8 @@ import {
   DWSUserManagementTab,
   DWSReminderSettingsTab
 } from '../components/dailyWorkStatus';
-import { DWSNotificationSettings } from '../components/dailyWorkStatus/DWSNotificationSettings';
 
-type DWSTab = 'DWSMaster' | 'DWSDaily' | 'DWSReport' | 'DWSDashboard' | 'DWSUsers' | 'DWSReminders' | 'DWSNotifications';
-type SystemRole = 'Super Admin' | 'Admin' | 'Manager' | 'Engineer' | null;
+type DWSTab = 'DWSMaster' | 'DWSDaily' | 'DWSReport' | 'DWSDashboard' | 'DWSUsers' | 'DWSReminders';
 
 interface DailyWorkStatusScreenProps {
   navigation: any;
@@ -33,9 +28,6 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const [userName, setUserName] = useState('User');
   const [activeTab, setActiveTab] = useState<DWSTab>('DWSDashboard');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [masterSubTab, setMasterSubTab] = useState<string>('');
-  const [userRole, setUserRole] = useState<SystemRole>(null);
-  const [personnel, setPersonnel] = useState<DWSPersonnel[]>([]);
   const { user, signOut } = useContext(AuthContext)!;
 
   useEffect(() => {
@@ -56,17 +48,6 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
         })
         .catch(console.error);
     }
-
-    // Subscribe to personnel to get user role
-    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel((personnelList) => {
-      setPersonnel(personnelList);
-      if (user?.email) {
-        const role = getUserRole(user.email, personnelList);
-        setUserRole(role);
-      }
-    });
-
-    return () => unsubPersonnel();
   }, [user]);
 
   // Handle sidebar navigation
@@ -83,10 +64,6 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       if (key === 'DWSDaily') {
         setStatusFilter('');
       }
-      // Clear master sub-tab filter when manually navigating
-      if (key === 'DWSMaster') {
-        setMasterSubTab('');
-      }
     }
   };
 
@@ -99,7 +76,6 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       case 'DWSDashboard': return 'Daily Work Status - Dashboard';
       case 'DWSUsers': return 'Daily Work Status - User Management';
       case 'DWSReminders': return 'Daily Work Status - Reminder Settings';
-      case 'DWSNotifications': return 'Daily Work Status - Notifications';
       default: return 'Daily Work Status';
     }
   };
@@ -108,7 +84,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
   const renderContent = () => {
     switch (activeTab) {
       case 'DWSMaster':
-        return <DWSMasterDataTab key={masterSubTab} initialSubTab={masterSubTab as any} />;
+        return <DWSMasterDataTab />;
       case 'DWSDaily':
         return <DWSDailyEntryTab key={statusFilter} initialFilter={statusFilter} />;
       case 'DWSReport':
@@ -116,18 +92,12 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
       case 'DWSDashboard':
         return <DWSDashboardTab onNavigate={(tab: DWSTab, filter?: string) => {
           setActiveTab(tab);
-          if (tab === 'DWSMaster' && filter) {
-            setMasterSubTab(filter);
-          } else {
-            setStatusFilter(filter || '');
-          }
+          setStatusFilter(filter || '');
         }} />;
       case 'DWSUsers':
         return <DWSUserManagementTab />;
       case 'DWSReminders':
         return <DWSReminderSettingsTab />;
-      case 'DWSNotifications':
-        return <DWSNotificationSettings />;
       default:
         return <DWSMasterDataTab />;
     }
@@ -137,7 +107,7 @@ const DailyWorkStatusScreen: React.FC<DailyWorkStatusScreenProps> = ({ navigatio
     <AppLayout 
       title={getTitle()}
       activeRoute={activeTab}
-      sidebarItems={getFilteredDWSNav(userRole)}
+      sidebarItems={DAILY_WORK_STATUS_NAV}
       onSidebarItemPress={handleSidebarPress}
     >
       <View style={styles.container}>

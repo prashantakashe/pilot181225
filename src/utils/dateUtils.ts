@@ -27,33 +27,33 @@ export const dateUtils = {
   },
 
   /**
-   * Format date to readable string (dd-mm-yyyy)
+   * Format date to readable string
    */
   formatDate(date: Date | Timestamp | null | undefined): string {
     if (!date) return 'N/A';
     
     const dateObj = date instanceof Timestamp ? date.toDate() : date;
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
-    return `${day}-${month}-${year}`;
+    return dateObj.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   },
 
   /**
-   * Format date with time (dd-mm-yyyy HH:MM AM/PM)
+   * Format date with time
    */
   formatDateTime(date: Date | Timestamp | null | undefined): string {
     if (!date) return 'N/A';
     
     const dateObj = date instanceof Timestamp ? date.toDate() : date;
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
-    const hours = dateObj.getHours();
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${day}-${month}-${year}, ${displayHours}:${minutes} ${ampm}`;
+    return dateObj.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   },
 
   /**

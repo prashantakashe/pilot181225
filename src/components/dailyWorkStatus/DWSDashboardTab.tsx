@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   TouchableOpacity
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -133,7 +132,7 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
       
       {/* Notification Banner */}
       <View style={styles.notificationBanner}>
-        <MaterialCommunityIcons name="bell" size={24} color="#1976D2" />
+        <Text style={styles.notificationIcon}>🔔</Text>
         <Text style={styles.notificationText}>
           Reminder: Log today's work entries by end of day!
         </Text>
@@ -146,7 +145,7 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
           onPress={() => onNavigate?.('DWSDaily')}
           {...(Platform.OS === 'web' && { title: 'View Daily Entries' })}
         >
-          <MaterialCommunityIcons name="clipboard-text" size={32} color="#1976D2" style={styles.kpiIcon} />
+          <Text style={styles.kpiIcon}>📋</Text>
           <Text style={styles.kpiValue}>{metrics?.todayEntries || 0}</Text>
           <Text style={styles.kpiLabel}>Today's Entries</Text>
         </TouchableOpacity>
@@ -156,17 +155,17 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
           onPress={() => onNavigate?.('DWSMaster')}
           {...(Platform.OS === 'web' && { title: 'View Projects' })}
         >
-          <MaterialCommunityIcons name="office-building" size={32} color="#388E3C" style={styles.kpiIcon} />
+          <Text style={styles.kpiIcon}>🏗️</Text>
           <Text style={styles.kpiValue}>{metrics?.activeProjects || 0}</Text>
           <Text style={styles.kpiLabel}>Active Projects</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.kpiCard, { backgroundColor: '#FFF3E0' }]}
-          onPress={() => onNavigate?.('DWSMaster', 'personnel')}
-          {...(Platform.OS === 'web' && { title: 'View Assigned Personnel in Master Data' })}
+          onPress={() => onNavigate?.('DWSMaster')}
+          {...(Platform.OS === 'web' && { title: 'View Personnel' })}
         >
-          <MaterialCommunityIcons name="account-hard-hat" size={32} color="#F57C00" style={styles.kpiIcon} />
+          <Text style={styles.kpiIcon}>👷</Text>
           <Text style={styles.kpiValue}>{metrics?.totalPersonnel || 0}</Text>
           <Text style={styles.kpiLabel}>Personnel</Text>
         </TouchableOpacity>
@@ -176,7 +175,7 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
           onPress={() => onNavigate?.('DWSDaily')}
           {...(Platform.OS === 'web' && { title: 'View Pending Items' })}
         >
-          <MaterialCommunityIcons name="clock-outline" size={32} color="#C2185B" style={styles.kpiIcon} />
+          <Text style={styles.kpiIcon}>⏳</Text>
           <Text style={styles.kpiValue}>{metrics?.pendingApprovals || 0}</Text>
           <Text style={styles.kpiLabel}>Pending</Text>
         </TouchableOpacity>
@@ -184,10 +183,7 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
       
       {/* Status Summary */}
       <View style={styles.summaryCard}>
-        <View style={styles.cardTitleRow}>
-          <MaterialCommunityIcons name="chart-line" size={20} color="#1976D2" />
-          <Text style={styles.cardTitle}> Work Status Summary</Text>
-        </View>
+        <Text style={styles.cardTitle}>📈 Work Status Summary</Text>
         <View style={styles.statusSummaryRow}>
           <TouchableOpacity 
             style={[styles.statusItem, { borderLeftColor: '#28a745' }]}
@@ -284,7 +280,7 @@ export const DWSDashboardTab: React.FC<DWSDashboardTabProps> = ({ onNavigate }) 
           ))
         ) : (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="inbox" size={48} color="#999" style={styles.emptyIcon} />
+            <Text style={styles.emptyIcon}>📭</Text>
             <Text style={styles.emptyText}>No recent entries</Text>
             <Text style={styles.emptySubtext}>Start logging your daily work activities</Text>
           </View>
@@ -354,6 +350,10 @@ const styles = StyleSheet.create({
     borderLeftColor: '#FFC107',
     marginBottom: spacing.lg
   },
+  notificationIcon: {
+    fontSize: 20,
+    marginRight: spacing.sm
+  },
   notificationText: {
     flex: 1,
     fontSize: 14,
@@ -391,6 +391,7 @@ const styles = StyleSheet.create({
     })
   },
   kpiIcon: {
+    fontSize: 32,
     marginBottom: spacing.sm
   },
   kpiValue: {
@@ -414,15 +415,11 @@ const styles = StyleSheet.create({
       web: { boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }
     })
   },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md
-  },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.TEXT_PRIMARY
+    color: colors.TEXT_PRIMARY,
+    marginBottom: spacing.md
   },
   statusSummaryRow: {
     flexDirection: 'row',
@@ -534,6 +531,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   emptyIcon: {
+    fontSize: 48,
     marginBottom: spacing.sm
   },
   emptyText: {

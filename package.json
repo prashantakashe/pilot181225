@@ -23,12 +23,9 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.16",
     "expo": "^54.0.25",
-<<<<<<< HEAD
-    "expo-dev-client": "^6.0.20",
-    "expo-document-picker": "^14.0.8",
-=======
-    "expo-notifications": "^0.32.14",
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
+      "expo-dev-client": "^6.0.20",
+      "expo-document-picker": "^14.0.8",
+      "expo-notifications": "^0.32.14",
     "firebase": "^10.5.0",
     "nodemailer": "^7.0.11",
     "react": "18.3.1",

@@ -1,14 +1,5 @@
 // src/components/dailyWorkStatus/DWSDailyEntryTab.tsx
-<<<<<<< HEAD
 import React, { useState, useRef, useEffect } from 'react';
-=======
-/**
- * Daily Entry Tab for Daily Work Status module
- * Allows creating/editing daily work entries with sub-activities
- */
-
-import React, { useState, useEffect, useRef, useContext } from 'react';
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
 import {
   View,
   Text,
@@ -22,7 +13,6 @@ import {
   Modal,
   Pressable
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -34,8 +24,6 @@ import {
   addStatusUpdateToEntry
 } from '../../services/dailyWorkStatusService';
 import type { DWSProject, DWSPersonnel, DWSStatus, DWSDailyEntry, DWSSubActivity } from '../../types/dailyWorkStatus';
-import { getUserRole, filterEntriesByPermission } from '../../utils/permissions';
-import { AuthContext } from '../../contexts/AuthContext';
 
 // Dropdown Component
 // TypeScript interfaces removed for JS compatibility
@@ -215,7 +203,6 @@ interface DWSDailyEntryTabProps {
 }
 
 export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilter }) => {
-<<<<<<< HEAD
           // Tooltip state for Add New Entry button (web)
           const [showAddTooltip, setShowAddTooltip] = useState(false);
         // Helper to format date as DD/MM/YYYY
@@ -301,17 +288,9 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         }
       }
     }, []);
-=======
-  const { user } = useContext(AuthContext)!;
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  
-  // User info
-  const [userName, setUserName] = useState('');
-  const [userId, setUserId] = useState('');
-  const [userRole, setUserRole] = useState<'Admin' | 'Manager' | 'Engineer' | null>(null);
   
   // Master data
   const [projects, setProjects] = useState<DWSProject[]>([]);
@@ -343,27 +322,12 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         /* Make table header sticky */
         .dws-table-scroll {
           position: relative;
-          overflow-y: auto;
-        }
-        .dws-table-container {
-          position: relative;
-          overflow: visible !important;
         }
         .dws-table-header {
           position: sticky !important;
           top: 0 !important;
           z-index: 100 !important;
           background-color: #2563EB !important;
-        }
-        
-        /* Action menu button hover */
-        .action-menu-btn:hover {
-          background-color: rgba(100, 116, 139, 0.1);
-        }
-        
-        /* Menu item hover */
-        .menu-item:hover {
-          background-color: rgba(59, 130, 246, 0.08);
         }
         
         /* Tooltip styles */
@@ -373,31 +337,29 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         }
         [title]:hover::after {
           content: attr(title);
-          position: fixed;
-          bottom: auto;
-          top: auto;
+          position: absolute;
+          bottom: 100%;
           left: 50%;
-          transform: translate(-50%, -120%);
+          transform: translateX(-50%);
           background-color: rgba(0, 0, 0, 0.85);
           color: white;
           padding: 6px 10px;
           borderRadius: 4px;
           white-space: nowrap;
           fontSize: 12px;
-          z-index: 999999;
+          z-index: 10000;
           pointer-events: none;
           margin-bottom: 5px;
         }
         [title]:hover::before {
           content: '';
-          position: fixed;
-          bottom: auto;
-          top: auto;
+          position: absolute;
+          bottom: 100%;
           left: 50%;
-          transform: translate(-50%, -40%);
+          transform: translateX(-50%);
           border: 5px solid transparent;
           border-top-color: rgba(0, 0, 0, 0.85);
-          z-index: 999999;
+          z-index: 10000;
           pointer-events: none;
         }
       `;
@@ -412,27 +374,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
   useEffect(() => {
     setLoading(true);
     
-    // Get user info
-    if (user?.email) {
-      setUserId(user.uid || user.email);
-      const emailName = user.email.split('@')[0];
-      setUserName(emailName);
-    }
-    
     const unsubProjects = dailyWorkStatusService.subscribeToProjects(setProjects);
-    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel((personnelList) => {
-      setPersonnel(personnelList);
-      // Determine user role
-      if (user?.email) {
-        const role = getUserRole(user.email, personnelList);
-        setUserRole(role);
-        // Set proper user name from personnel
-        const userProfile = personnelList.find(p => p.email === user.email);
-        if (userProfile) {
-          setUserName(userProfile.name);
-        }
-      }
-    });
+    const unsubPersonnel = dailyWorkStatusService.subscribeToPersonnel(setPersonnel);
     const unsubStatuses = dailyWorkStatusService.subscribeToStatuses(setStatuses);
     const unsubEntries = dailyWorkStatusService.subscribeToEntries((data) => {
       setEntries(data);
@@ -732,7 +675,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
     }
   };
 
-<<<<<<< HEAD
   // Helper to check if a date is today
   function isToday(date) {
     if (!date) return false;
@@ -756,29 +698,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
     }
     return true;
   });
-=======
-  // Filter entries based on role and other filters
-  const filteredEntries = (() => {
-    // First apply role-based filtering
-    const roleFiltered = filterEntriesByPermission(
-      entries,
-      userRole,
-      userId,
-      userName,
-      personnel
-    );
-    
-    // Then apply user's search filters
-    return roleFiltered.filter(entry => {
-      if (filterProject && !entry.projectName.toLowerCase().includes(filterProject.toLowerCase())) return false;
-      if (filterDate && !entry.dateTime.toLowerCase().includes(filterDate.toLowerCase())) return false;
-      if (filterActivity && !entry.mainActivity.toLowerCase().includes(filterActivity.toLowerCase())) return false;
-      if (filterAssigned && !entry.assignedTo.toLowerCase().includes(filterAssigned.toLowerCase())) return false;
-      if (filterStatus && entry.finalStatus !== filterStatus) return false;
-      return true;
-    });
-  })();
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
 
   if (loading) {
     return (
@@ -794,7 +713,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
       <Text style={styles.pageTitle}>📝 Daily Entry - Log Activities</Text>
       
       {/* Filters */}
-<<<<<<< HEAD
       <View style={[styles.filterRow, { alignItems: 'center', position: 'relative' }]}> 
         {/* Show Only Today's Updates Checkbox */}
         <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
@@ -824,7 +742,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
               </View>
             </TouchableOpacity>
           )}
-          <Text style={{ fontSize: 13, color: '#222' }}>Show only today's updates</Text>
+          <Text style={{ fontSize: 13, color: '#222' }}>Today's Updates</Text>
           {showTodayOnly && (
             <Text style={{
               marginLeft: 8,
@@ -859,13 +777,51 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
           value={filterActivity}
           onChangeText={setFilterActivity}
         />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter Assigned"
-          value={filterAssigned}
-          onChangeText={setFilterAssigned}
-        />
-        {/* Status Filter Dropdown */}
+        {/* Filter Assigned as Dropdown */}
+        {Platform.OS === 'web' ? (
+          <select
+            style={{
+              minWidth: 120,
+              padding: '6px 12px',
+              borderRadius: 6,
+              border: '1px solid #D1D5DB',
+              fontSize: 14,
+              background: '#fff',
+              color: '#222',
+              marginLeft: 8
+            }}
+            value={filterAssigned}
+            onChange={e => setFilterAssigned(e.target.value)}
+          >
+            <option value="">All Assigned</option>
+            {personnel.map(p => (
+              <option key={p.name} value={p.name}>{p.name}</option>
+            ))}
+          </select>
+        ) : (
+          <View style={{ minWidth: 120 }}>
+            <Dropdown
+              options={[{ value: '', label: 'All Assigned' }, ...personnel.map(p => ({ value: p.name, label: p.name }))]}
+              value={filterAssigned}
+              onSelect={setFilterAssigned}
+              placeholder="Assigned"
+              width={120}
+            />
+          </View>
+        )}
+        {/* Clear Filters Button */}
+        <TouchableOpacity
+          style={{ marginLeft: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#eee', borderRadius: 6, borderWidth: 1, borderColor: '#ccc' }}
+          onPress={() => {
+            setFilterProject('');
+            setFilterDate('');
+            setFilterActivity('');
+            setFilterAssigned('');
+            setFilterStatus('');
+          }}
+        >
+          <Text style={{ fontSize: 13, color: '#333' }}>Clear</Text>
+        </TouchableOpacity>
         <View style={styles.filterPickerContainer}>
           {Platform.OS === 'web' ? (
             <select
@@ -905,52 +861,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
               />
             </View>
           )}
-=======
-      <View style={styles.filterCard}>
-        <View style={styles.filterSingleRow}>
-          <TextInput
-            style={styles.filterInputCompact}
-            placeholder="Project"
-            value={filterProject}
-            onChangeText={setFilterProject}
-          />
-          <TextInput
-            style={styles.filterInputCompact}
-            placeholder="Date/Time"
-            value={filterDate}
-            onChangeText={setFilterDate}
-          />
-          <TextInput
-            style={styles.filterInputCompact}
-            placeholder="Activity"
-            value={filterActivity}
-            onChangeText={setFilterActivity}
-          />
-          <TextInput
-            style={styles.filterInputCompact}
-            placeholder="Assigned"
-            value={filterAssigned}
-            onChangeText={setFilterAssigned}
-          />
-          <View style={styles.filterDivider} />
-          <TouchableOpacity
-            style={[styles.filterStatusBtnCompact, !filterStatus && styles.filterStatusBtnActive]}
-            onPress={() => setFilterStatus('')}
-          >
-            <Text style={[styles.filterStatusTextCompact, !filterStatus && styles.filterStatusTextActive]}>All</Text>
-          </TouchableOpacity>
-          {statuses.map(status => (
-            <TouchableOpacity
-              key={status.id}
-              style={[styles.filterStatusBtnCompact, filterStatus === status.name && styles.filterStatusBtnActive]}
-              onPress={() => setFilterStatus(status.name)}
-            >
-              <Text style={[styles.filterStatusTextCompact, filterStatus === status.name && styles.filterStatusTextActive]}>
-                {status.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
         </View>
       </View>
       
@@ -961,10 +871,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
         {...(Platform.OS === 'web' ? { className: 'dws-table-scroll' } : {})}
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View 
-            style={styles.tableContainer}
-            {...(Platform.OS === 'web' ? { className: 'dws-table-container' } : {})}
-          >
+          <View style={styles.tableContainer}>
             {/* Header */}
             <View 
               style={styles.tableHeader}
@@ -1033,13 +940,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
             {filteredEntries.map((entry, index) => (
               <View key={entry.id} style={[index % 2 === 1 && styles.alternateRow]}>
                 {/* Main Entry Row */}
-                <View style={[
-                  styles.tableRow,
-                  entry.statusUpdates?.filter(u => u.note).length === 0 && {
-                    borderBottomWidth: 1,
-                    borderBottomColor: '#E5E7EB'
-                  }
-                ]}>
+                <View style={styles.tableRow}>
                   {/* Project Dropdown */}
                   <View style={[styles.cell, { width: 150 }]}> 
                     <Dropdown
@@ -1093,7 +994,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         spellCheck={false}
                       />
                     )}
-<<<<<<< HEAD
                     {/* Status Updates - horizontal, wrapping, spanning Main Activity to Final Status */}
                     {/* Status Updates - horizontal, wrapping, spanning Main Activity to Final Status */}
                     {Platform.OS === 'web' ? (
@@ -1121,8 +1021,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                         })}
                       </View>
                     )}
-=======
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                   </View>
                   
                   {/* Start Date */}
@@ -1143,17 +1041,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           if (!entry.startDate) return '';
                           try {
                             const date = new Date(entry.startDate);
-<<<<<<< HEAD
                             return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
                           } catch (e) {
-=======
-                            if (isNaN(date.getTime())) return '';
-                            const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            return `${year}-${month}-${day}`;
-                          } catch {
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                             return '';
                           }
                         })()}
@@ -1227,17 +1116,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           if (!entry.targetDate) return '';
                           try {
                             const date = new Date(entry.targetDate);
-<<<<<<< HEAD
                             return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
                           } catch (e) {
-=======
-                            if (isNaN(date.getTime())) return '';
-                            const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            return `${year}-${month}-${day}`;
-                          } catch {
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                             return '';
                           }
                         })()}
@@ -1246,8 +1126,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           e.stopPropagation();
                           const dateValue = e.target.value;
                           if (dateValue) {
-                            const [year, month, day] = dateValue.split('-').map(Number);
-                            const date = new Date(year, month - 1, day);
+                            const date = new Date(dateValue);
                             // Validate: if start date exists, target date must be >= start date
                             if (entry.startDate) {
                               const startDate = new Date(entry.startDate);
@@ -1307,62 +1186,90 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                   
                   {/* Actions */}
                   <View style={[styles.cell, styles.actionsCell, { width: 80 }]}>
-                    <View>
-                      <TouchableOpacity 
-                        style={styles.actionMenuBtn}
-                        onPress={() => {
-                          setOpenMenuId(openMenuId === entry.id ? null : entry.id);
-                        }}
-                      >
-                        <MaterialCommunityIcons name="dots-vertical" size={24} color="#64748B" />
-                      </TouchableOpacity>
-                      
-                      {openMenuId === entry.id && (
-                        <>
-                          <Pressable 
-                            style={styles.menuBackdrop}
-                            onPress={() => setOpenMenuId(null)}
-                          />
-                          <View style={index === 0 ? styles.actionMenuBelow : styles.actionMenuAbove}>
-                            <TouchableOpacity 
-                              style={styles.menuItem}
-                              onPress={() => {
-                                setOpenMenuId(null);
-                                handleAddStatusUpdate(entry.id);
-                              }}
-                            >
-                              <MaterialCommunityIcons name="clipboard-text" size={16} color="#3B82F6" />
-                              <Text style={styles.menuItemText}>Add Status Update</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity 
-                              style={styles.menuItem}
-                              onPress={() => {
-                                console.log('[DWS] + Sub button clicked for entry:', entry.id);
-                                setOpenMenuId(null);
-                                handleAddSubActivity(entry.id);
-                              }}
-                            >
-                              <MaterialCommunityIcons name="plus-circle" size={16} color="#10B981" />
-                              <Text style={styles.menuItemText}>Add Sub Activity</Text>
-                            </TouchableOpacity>
-                            
-                            <View style={styles.menuDivider} />
-                            
-                            <TouchableOpacity 
-                              style={styles.menuItem}
-                              onPress={() => {
-                                setOpenMenuId(null);
-                                handleDeleteEntry(entry.id);
-                              }}
-                            >
-                              <MaterialCommunityIcons name="delete" size={16} color="#EF4444" />
-                              <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Delete Entry</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </>
-                      )}
-                    </View>
+                    {Platform.OS === 'web' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                        <button 
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: '#2563EB',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                            handleAddStatusUpdate(entry.id);
+                          }}
+                          title="Add Status Update"
+                        >
+                          + Status
+                        </button>
+                        <button 
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: '#10B981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={(e: any) => {
+                            console.log('[DWS] + Sub button clicked for entry:', entry.id);
+                            e.stopPropagation();
+                            handleAddSubActivity(entry.id);
+                          }}
+                          title="Add Sub Activity"
+                        >
+                          + Sub
+                        </button>
+                        <button 
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: '#EF4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            cursor: 'pointer'
+                          }}
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                            handleDeleteEntry(entry.id);
+                          }}
+                          title="Delete Entry"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <TouchableOpacity 
+                          style={styles.actionBtn}
+                          onPress={() => handleAddStatusUpdate(entry.id)}
+                        >
+                          <Text style={styles.actionBtnText}>+ Status</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={[styles.actionBtn, styles.actionBtnSuccess]}
+                          onPress={() => handleAddSubActivity(entry.id)}
+                        >
+                          <Text style={styles.actionBtnText}>+ Sub</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={[styles.actionBtn, styles.actionBtnDanger]}
+                          onPress={() => handleDeleteEntry(entry.id)}
+                        >
+                          <Text style={styles.actionBtnText}>🗑️</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                   </View>
                   
                   {/* Hours */}
@@ -1462,39 +1369,11 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                   </View>
                 </View>
                 
-                {/* Status Updates Row - Full Width */}
-                {entry.statusUpdates?.filter(u => u.note).length > 0 && (
-                  <View style={styles.statusUpdatesRow}>
-                    <View style={{ width: 250 }} />
-                    <View style={styles.statusUpdatesContainer}>
-                      {entry.statusUpdates?.filter(u => u.note).map((update, idx) => {
-                        const timestamp = formatTimestamp(update.timestamp);
-                        return (
-                          <View key={idx} style={styles.statusUpdate}>
-                            <Text style={styles.statusTimestamp}>
-                              {timestamp || 'Status Update'}
-                            </Text>
-                            <Text style={styles.statusUpdateNote}>{update.note}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )}
-                
                 {/* Sub-Activity Rows */}
                 {entry.subActivities?.map((sub) => (
-                  <React.Fragment key={sub.id}>
-                    <View style={[
-                      styles.tableRow, 
-                      styles.subRow,
-                      sub.statusUpdates?.filter(u => u.note).length === 0 && {
-                        borderBottomWidth: 1,
-                        borderBottomColor: '#E5E7EB'
-                      }
-                    ]}>
-                      <View style={[styles.cell, { width: 150 }]} />
-                      <View style={[styles.cell, { width: 100 }]} />
+                  <View key={sub.id} style={[styles.tableRow, styles.subRow]}>
+                    <View style={[styles.cell, { width: 150 }]} />
+                    <View style={[styles.cell, { width: 100 }]} />
                     
                     {/* Sub Activity Description */}
                     <View style={[styles.cell, { width: 250 }]}>
@@ -1530,7 +1409,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           multiline
                         />
                       )}
-<<<<<<< HEAD
                       {/* Sub-Activity Status Updates */}
                       <View style={styles.statusUpdatesRowContainer}>
                         {sub.statusUpdates?.filter(u => u.note).map((update, idx) => {
@@ -1545,8 +1423,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           );
                         })}
                       </View>
-=======
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                     </View>
                     
                     {/* Start Date */}
@@ -1557,17 +1433,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           value={sub.startDate ? (() => {
                             try {
                               const date = new Date(sub.startDate);
-<<<<<<< HEAD
                               return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
                             } catch (e) {
-=======
-                              if (isNaN(date.getTime())) return '';
-                              const year = date.getFullYear();
-                              const month = String(date.getMonth() + 1).padStart(2, '0');
-                              const day = String(date.getDate()).padStart(2, '0');
-                              return `${year}-${month}-${day}`;
-                            } catch {
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                               return '';
                             }
                           })() : ''}
@@ -1644,17 +1511,8 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           value={sub.targetDate ? (() => {
                             try {
                               const date = new Date(sub.targetDate);
-<<<<<<< HEAD
                               return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
                             } catch (e) {
-=======
-                              if (isNaN(date.getTime())) return '';
-                              const year = date.getFullYear();
-                              const month = String(date.getMonth() + 1).padStart(2, '0');
-                              const day = String(date.getDate()).padStart(2, '0');
-                              return `${year}-${month}-${day}`;
-                            } catch {
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
                               return '';
                             }
                           })() : ''}
@@ -1664,8 +1522,7 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                           onChange={(e: any) => {
                             const dateValue = e.target.value;
                             if (dateValue) {
-                              const [year, month, day] = dateValue.split('-').map(Number);
-                              const date = new Date(year, month - 1, day);
+                              const date = new Date(dateValue);
                               // Validate: if start date exists, target date must be >= start date
                               if (sub.startDate) {
                                 const startDate = new Date(sub.startDate);
@@ -1737,50 +1594,63 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                     
                     {/* Actions */}
                     <View style={[styles.cell, styles.actionsCell, { width: 80 }]}>
-                      <View>
-                        <TouchableOpacity 
-                          style={styles.actionMenuBtn}
-                          onPress={() => {
-                            setOpenMenuId(openMenuId === `${entry.id}-${sub.id}` ? null : `${entry.id}-${sub.id}`);
-                          }}
-                        >
-                          <MaterialCommunityIcons name="dots-vertical" size={24} color="#64748B" />
-                        </TouchableOpacity>
-                        
-                        {openMenuId === `${entry.id}-${sub.id}` && (
-                          <>
-                            <Pressable 
-                              style={styles.menuBackdrop}
-                              onPress={() => setOpenMenuId(null)}
-                            />
-                            <View style={styles.actionMenuAbove}>
-                              <TouchableOpacity 
-                                style={styles.menuItem}
-                                onPress={() => {
-                                  setOpenMenuId(null);
-                                  handleAddSubActivityStatusUpdate(entry.id, sub.id);
-                                }}
-                              >
-                                <MaterialCommunityIcons name="clipboard-text" size={16} color="#3B82F6" />
-                                <Text style={styles.menuItemText}>Add Status Update</Text>
-                              </TouchableOpacity>
-                              
-                              <View style={styles.menuDivider} />
-                              
-                              <TouchableOpacity 
-                                style={styles.menuItem}
-                                onPress={() => {
-                                  setOpenMenuId(null);
-                                  handleDeleteSubActivity(entry.id, sub.id);
-                                }}
-                              >
-                                <MaterialCommunityIcons name="delete" size={16} color="#EF4444" />
-                                <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Delete Sub Activity</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </>
-                        )}
-                      </View>
+                      {Platform.OS === 'web' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                          <button 
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#2563EB',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap'
+                            }}
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              handleAddSubActivityStatusUpdate(entry.id, sub.id);
+                            }}
+                            title="Add Status Update"
+                          >
+                            + Status
+                          </button>
+                          <button 
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#EF4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              cursor: 'pointer'
+                            }}
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              handleDeleteSubActivity(entry.id, sub.id);
+                            }}
+                            title="Delete Sub Activity"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <TouchableOpacity 
+                            style={styles.actionBtn}
+                            onPress={() => handleAddSubActivityStatusUpdate(entry.id, sub.id)}
+                          >
+                            <Text style={styles.actionBtnText}>+ Status</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={[styles.actionBtn, styles.actionBtnDanger]}
+                            onPress={() => handleDeleteSubActivity(entry.id, sub.id)}
+                          >
+                            <Text style={styles.actionBtnText}>🗑️</Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
                     </View>
                     
                     {/* Hours */}
@@ -1892,27 +1762,6 @@ export const DWSDailyEntryTab: React.FC<DWSDailyEntryTabProps> = ({ initialFilte
                       </ScrollView>
                     </View>
                   </View>
-                  
-                  {/* Sub-Activity Status Updates Row - Full Width */}
-                  {sub.statusUpdates?.filter(u => u.note).length > 0 && (
-                    <View style={styles.statusUpdatesRow}>
-                      <View style={{ width: 250 }} />
-                      <View style={styles.statusUpdatesContainer}>
-                        {sub.statusUpdates?.filter(u => u.note).map((update, idx) => {
-                          const timestamp = formatTimestamp(update.timestamp);
-                          return (
-                            <View key={idx} style={styles.statusUpdate}>
-                              <Text style={styles.statusTimestamp}>
-                                {timestamp || 'Status Update'}
-                              </Text>
-                              <Text style={styles.statusUpdateNote}>{update.note}</Text>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  )}
-                  </React.Fragment>
                 ))}
               </View>
             ))}
@@ -1966,106 +1815,23 @@ const styles = StyleSheet.create({
     color: colors.TEXT_PRIMARY,
     padding: spacing.lg
   },
-  filterCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    padding: spacing.sm,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    ...Platform.select({
-      web: { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' }
-    })
-  },
-  filterSingleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    flexWrap: 'wrap'
-  },
-  filterInputCompact: {
-    flex: 1,
-    minWidth: 120,
-    maxWidth: 180,
-    height: 32,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 4,
-    paddingHorizontal: spacing.xs,
-    fontSize: 13,
-    backgroundColor: '#FFFFFF'
-  },
-  filterDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: spacing.xs
-  },
-  filterStatusBtnCompact: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    height: 32,
-    justifyContent: 'center'
-  },
-  filterStatusTextCompact: {
-    fontSize: 13,
-    color: '#374151',
-    fontWeight: '500'
-  },
-  filterInputRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.sm
-  },
-  filterInput: {
-    flex: 1,
-    minWidth: 150,
-    height: 36,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 4,
-    paddingHorizontal: spacing.sm,
-    fontSize: 14,
-    backgroundColor: '#FFFFFF'
-  },
-  filterStatusRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    flexWrap: 'wrap'
-  },
-  filterStatusBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    minWidth: 80,
-    alignItems: 'center'
-  },
-  filterStatusBtnActive: {
-    backgroundColor: colors.ACTION_BLUE,
-    borderColor: colors.ACTION_BLUE
-  },
-  filterStatusText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500'
-  },
-  filterStatusTextActive: {
-    color: '#FFFFFF'
-  },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md
+  },
+  filterInput: {
+    flex: 1,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 14,
+    backgroundColor: '#fff'
   },
   filterPickerContainer: {
     minWidth: 150
@@ -2097,8 +1863,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    width: 1130,
-    overflow: 'visible',
     ...Platform.select({
       web: { boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }
     })
@@ -2107,17 +1871,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.ACTION_BLUE,
     paddingVertical: spacing.md,
-<<<<<<< HEAD
     zIndex: 10
-=======
-    ...Platform.select({
-      web: {
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }
-    })
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
   },
   headerCell: {
     color: '#fff',
@@ -2128,18 +1882,17 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
     minHeight: 60,
     alignItems: 'flex-start',
-    paddingVertical: spacing.sm,
-    backgroundColor: 'transparent',
-    overflow: 'visible'
+    paddingVertical: spacing.sm
   },
   alternateRow: {
     backgroundColor: '#F9FAFB'
   },
   subRow: {
-    backgroundColor: 'transparent'
+    backgroundColor: '#F8F9FA'
   },
   cell: {
     paddingHorizontal: spacing.sm,
@@ -2158,10 +1911,7 @@ const styles = StyleSheet.create({
   actionsCell: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4,
-    position: 'relative',
-    zIndex: 10001,
-    overflow: 'visible'
+    gap: 4
   },
   actionBtn: {
     backgroundColor: colors.ACTION_BLUE,
@@ -2212,29 +1962,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.TEXT_PRIMARY
   },
-  statusUpdatesRow: {
-    width: 1130,
-    padding: spacing.sm,
-    paddingTop: 0,
-    paddingBottom: spacing.md,
-    borderTopWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'transparent'
-  },
-  statusUpdatesScrollView: {
-    marginTop: spacing.xs,
-    maxHeight: 120
-  },
   statusUpdatesContainer: {
     // legacy, not used
   },
   statusUpdatesRowContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-<<<<<<< HEAD
     alignItems: 'flex-start',
     gap: 8,
     paddingTop: spacing.xs,
@@ -2253,12 +1986,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     flexGrow: 0,
     display: 'flex',
-=======
-    gap: spacing.xs,
-    alignItems: 'flex-start',
-    flex: 1,
-    maxWidth: 880
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
   },
   statusUpdate: {
     backgroundColor: '#FFF3CD',
@@ -2266,16 +1993,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: '#FFC107',
     borderRadius: 4,
-<<<<<<< HEAD
     marginRight: spacing.xs,
     marginBottom: spacing.xs,
     minWidth: 230, // FIX: Changed from 'width' to 'minWidth' for consistent flex behavior
     flexShrink: 0, // Prevents shrinking below minWidth, forcing wrap
     flexGrow: 0, // FIX: Prevents growing to fill remaining space
-=======
-    width: 230,
-    minWidth: 230
->>>>>>> 6ba3283f390a7635e333c0eb545273abf6eaa638
   },
   statusTimestamp: {
     fontSize: 14,
@@ -2326,143 +2048,5 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '300',
     marginTop: -2
-  },
-  actionMenuBtn: {
-    padding: 4,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      web: { 
-        cursor: 'pointer',
-        transition: 'background-color 0.2s'
-      }
-    })
-  },
-  menuBackdrop: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 99998,
-    ...Platform.select({
-      web: { 
-        position: 'fixed' as any
-      },
-      default: {
-        position: 'absolute'
-      }
-    })
-  },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)'
-  },
-  actionMenu: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    minWidth: 200,
-    padding: 8,
-    ...Platform.select({
-      web: { 
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5
-      }
-    })
-  },
-  actionMenuAbove: {
-    position: 'absolute',
-    bottom: 35,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    minWidth: 180,
-    padding: 4,
-    zIndex: 99999,
-    ...Platform.select({
-      web: { 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 10
-      }
-    })
-  },
-  actionMenuBelow: {
-    position: 'absolute',
-    top: 35,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    minWidth: 180,
-    padding: 4,
-    zIndex: 99999,
-    ...Platform.select({
-      web: { 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        elevation: 10
-      }
-    })
-  },
-  actionMenuPositioned: {
-    position: 'absolute',
-    top: 40,
-    right: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    minWidth: 200,
-    padding: 8,
-    ...Platform.select({
-      web: { 
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5
-      }
-    })
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 4,
-    gap: 8,
-    ...Platform.select({
-      web: { 
-        cursor: 'pointer',
-        transition: 'background-color 0.15s'
-      }
-    })
-  },
-  menuItemText: {
-    fontSize: 13,
-    color: '#1F2937',
-    fontWeight: '500'
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 2
   }
 });
