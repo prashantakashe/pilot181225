@@ -31,7 +31,7 @@
       "bundler": "metro",
       "build": {
         "devtool": false,
-        "publicPath": "/pilotappra/"
+        "publicPath": "/pilot181225/"
       }
     },
     "scheme": "myapp",
