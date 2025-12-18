@@ -1,7 +1,6 @@
-# Expo
-.expo/
+nexpo/
 .expo-shared/
-dist/
+# dist/ removed to allow static export deployment
 npm-debug.*
 *.jks
 *.p8
@@ -32,8 +31,7 @@ yarn.lock
 
 # Build
 /build
-/dist
-.cache
+# .cache
 
 # Firebase
 .firebaserc
