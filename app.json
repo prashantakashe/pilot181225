@@ -30,7 +30,8 @@
     "web": {
       "bundler": "metro",
       "build": {
-        "devtool": false
+        "devtool": false,
+        "publicPath": "/pilotappra/"
       }
     },
     "scheme": "myapp",
