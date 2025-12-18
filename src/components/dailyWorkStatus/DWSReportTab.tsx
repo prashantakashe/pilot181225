@@ -27,7 +27,27 @@ import * as XLSX from 'xlsx';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../services/firebase';
 
-type ReportType = 'daily' | 'project' | 'user' | 'status' | 'delay' | 'workload' | 'target' | 'statusConversion' | 'contribution';
+// Helper function to format dates consistently as dd-mm-yyyy
+const formatDateDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+// Helper function to format date with time as dd-mm-yyyy, HH:MM AM/PM
+const formatDateTimeDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${day}-${month}-${year}, ${displayHours}:${minutes} ${ampm}`;
+};
+
+type ReportType = 'daily' | 'project' | 'user' | 'status' | 'delay' | 'workload' | 'target' | 'statusConversion' | 'contribution' | 'tomorrow';
 
 // Dropdown Component with Search
 interface DropdownOption {
@@ -353,6 +373,12 @@ export const DWSReportTab: React.FC = () => {
         return;
       }
       
+      // Handle tomorrow's activities separately
+      if (reportType === 'tomorrow') {
+        await handleGenerateTomorrowActivities();
+        return;
+      }
+      
       // Handle target achievement separately
       if (reportType === 'target') {
         await handleGenerateTargetAchievement();
@@ -423,7 +449,7 @@ export const DWSReportTab: React.FC = () => {
           ...entry,
           daysDiff,
           pendingSinceDays,
-          targetDateFormatted: targetDate.toLocaleDateString('en-IN')
+          targetDateFormatted: formatDateDDMMYYYY(targetDate)
         };
         
         if (daysDiff < 0 && entry.finalStatus !== 'Completed') {
@@ -485,7 +511,10 @@ export const DWSReportTab: React.FC = () => {
       const reportInfo = [[
         `Report Type: ${reportType}`,
         `Date Range: ${startDate || 'All'} to ${endDate || 'All'}`,
-        `Generated: ${new Date().toLocaleString()}`
+        (() => {
+          const now = new Date();
+          return `Generated: ${formatDateTimeDDMMYYYY(now)}`;
+        })()
       ]];
       const emptyRow = [[]];
       
@@ -551,6 +580,11 @@ export const DWSReportTab: React.FC = () => {
     
     if (reportType === 'workload' && workloadData) {
       exportWorkloadDistributionPDF();
+      return;
+    }
+    
+    if (reportType === 'tomorrow' && workloadData?.tomorrowReport) {
+      exportTomorrowActivitiesPDF();
       return;
     }
     
@@ -684,7 +718,7 @@ export const DWSReportTab: React.FC = () => {
               <div class="report-info">
                 <strong>Report Type:</strong> ${reportType.toUpperCase()} |
                 <strong>Date Range:</strong> ${startDate || 'All'} to ${endDate || 'All'} |
-                <strong>Generated:</strong> ${new Date().toLocaleString()}
+                <strong>Generated:</strong> ${formatDateTimeDDMMYYYY(new Date())}
               </div>
             </div>
             
@@ -744,7 +778,7 @@ export const DWSReportTab: React.FC = () => {
             
             <div class="footer">
               <p><strong>Daily Work Status Management System</strong></p>
-              <p>Report generated on ${new Date().toLocaleString()} | Page 1 of 1</p>
+              <p>Report generated on ${formatDateTimeDDMMYYYY(new Date())} | Page 1 of 1</p>
               <p style="margin-top: 5px; font-size: 8px;">© ${new Date().getFullYear()} - Confidential & Proprietary</p>
             </div>
           </body>
@@ -795,7 +829,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary sheet
       const summaryData = [
         ['Delay Analysis Report'],
-        ['Generated:', new Date().toLocaleString()],
+        ['Generated:', formatDateTimeDDMMYYYY(new Date())],
         [],
         ['Summary'],
         ['Overdue Tasks:', delayedTasks.length],
@@ -896,7 +930,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>⚠️ Delay Analysis Report</h1>
-              <p style="margin: 5px 0; font-size: 11px;">${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p style="margin: 5px 0; font-size: 11px;">${formatDateDDMMYYYY(new Date())}</p>
             </div>
             
             <div class="summary-box">
@@ -1000,7 +1034,7 @@ export const DWSReportTab: React.FC = () => {
             
             <div class="footer">
               <p><strong>Daily Work Status - Delay Analysis Report</strong></p>
-              <p>Generated on ${new Date().toLocaleString()} | © ${new Date().getFullYear()}</p>
+              <p>Generated on ${formatDateTimeDDMMYYYY(new Date())} | © ${new Date().getFullYear()}</p>
             </div>
           </body>
           </html>
@@ -1031,7 +1065,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary Sheet
       const summaryData = [
         ['WORKLOAD DISTRIBUTION REPORT'],
-        ['Generated on:', new Date().toLocaleString()],
+        ['Generated on:', formatDateTimeDDMMYYYY(new Date())],
         [''],
         ['SUMMARY'],
         ['Total Personnel', workloadData.length],
@@ -1141,7 +1175,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>👥 WORKLOAD DISTRIBUTION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1209,6 +1243,150 @@ export const DWSReportTab: React.FC = () => {
             
             <div class="footer">
               App Pilot - Daily Work Status System | Workload Distribution Report
+            </div>
+          </body>
+          </html>
+        `;
+        
+        const printWindow = window.open('', '', 'width=1200,height=800');
+        if (!printWindow) {
+          Alert.alert('Error', 'Please allow popups for this website');
+          return;
+        }
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 250);
+      } else {
+        Alert.alert('Info', 'PDF export is only available on web platform');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to export PDF: ' + error.message);
+    }
+  };
+
+  // Export Tomorrow's Activities to PDF
+  const exportTomorrowActivitiesPDF = () => {
+    if (!workloadData?.tomorrowReport) return;
+    
+    try {
+      if (Platform.OS === 'web') {
+        const tomorrowReport = workloadData.tomorrowReport;
+        
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Tomorrow's Activities Report</title>
+            <style>
+              @page { size: A4 landscape; margin: 15mm; }
+              body { font-family: Arial, sans-serif; font-size: 10px; }
+              .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+              .header h1 { margin: 0; color: #007bff; font-size: 22px; }
+              .summary-box { background: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; display: flex; justify-content: space-around; }
+              .summary-item { text-align: center; }
+              .summary-item .label { font-size: 9px; color: #666; }
+              .summary-item .value { font-size: 18px; font-weight: bold; }
+              .section-title { color: white; padding: 8px; margin-top: 20px; font-size: 12px; font-weight: bold; }
+              .section-blue { background: #007bff; }
+              .section-yellow { background: #ffc107; color: #000; }
+              table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+              th { background: #343a40; color: white; padding: 6px; text-align: left; font-size: 9px; }
+              td { padding: 5px 6px; border-bottom: 1px solid #dee2e6; font-size: 8px; }
+              tr:nth-child(even) { background: #f8f9fa; }
+              .priority-high { color: #dc3545; font-weight: bold; }
+              .priority-medium { color: #ffc107; font-weight: bold; }
+              .priority-low { color: #28a745; font-weight: bold; }
+              .urgency-critical { color: #dc3545; font-weight: bold; }
+              .urgency-high { color: #ff6b6b; font-weight: bold; }
+              .urgency-medium { color: #ffc107; font-weight: bold; }
+              .urgency-low { color: #28a745; font-weight: bold; }
+              .footer { margin-top: 20px; text-align: center; font-size: 8px; color: #666; border-top: 1px solid #dee2e6; padding-top: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>🌅 TOMORROW'S ACTIVITIES REPORT</h1>
+              <div style="font-size: 10px; color: #666;">Date: ${tomorrowReport.reportDate} | Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
+            </div>
+            
+            <div class="summary-box">
+              <div class="summary-item">
+                <div class="label">Starting Tomorrow</div>
+                <div class="value" style="color: #007bff;">${tomorrowReport.summary.totalStarting}</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">Ongoing Activities</div>
+                <div class="value" style="color: #ffc107;">${tomorrowReport.summary.totalOngoing}</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">Total Activities</div>
+                <div class="value" style="color: #6c757d;">${tomorrowReport.summary.totalActivities}</div>
+              </div>
+            </div>
+            
+            ${tomorrowReport.startingTomorrow.length > 0 ? `
+            <div class="section-title section-blue">🌅 STARTING TOMORROW (${tomorrowReport.startingTomorrow.length})</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Activity</th>
+                  <th>Assigned To</th>
+                  <th>Start Date</th>
+                  <th>Target Date</th>
+                  <th>Priority</th>
+                  <th>Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tomorrowReport.startingTomorrow.map(task => `
+                  <tr>
+                    <td>${task.projectName}</td>
+                    <td>${task.mainActivity}</td>
+                    <td>${task.assignedTo}</td>
+                    <td>${task.startDateFormatted}</td>
+                    <td>${task.targetDateFormatted}</td>
+                    <td class="priority-${task.priority.toLowerCase()}">${task.priority}</td>
+                    <td>${task.hours}h</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ` : ''}
+            
+            ${tomorrowReport.ongoingActivities.length > 0 ? `
+            <div class="section-title section-yellow">📝 ONGOING ACTIVITIES (${tomorrowReport.ongoingActivities.length})</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Activity</th>
+                  <th>Assigned To</th>
+                  <th>Start Date</th>
+                  <th>Target Date</th>
+                  <th>Urgency</th>
+                  <th>Last Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tomorrowReport.ongoingActivities.map(task => `
+                  <tr>
+                    <td>${task.projectName}</td>
+                    <td>${task.mainActivity}</td>
+                    <td>${task.assignedTo}</td>
+                    <td>${task.startDateFormatted}</td>
+                    <td>${task.targetDateFormatted}</td>
+                    <td class="urgency-${task.urgency.toLowerCase()}">${task.urgency}</td>
+                    <td style="font-size: 7px;">${task.statusUpdates?.[task.statusUpdates.length - 1]?.note || 'No updates'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ` : ''}
+            
+            <div class="footer">
+              App Pilot - Daily Work Status System | Tomorrow's Activities Report
             </div>
           </body>
           </html>
@@ -1328,7 +1506,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>🎯 TARGET ACHIEVEMENT REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1413,7 +1591,7 @@ export const DWSReportTab: React.FC = () => {
       // Summary Sheet
       const summaryData = [
         ['STATUS CONVERSION REPORT'],
-        ['Generated on:', new Date().toLocaleString()],
+        ['Generated on:', formatDateTimeDDMMYYYY(new Date())],
         [''],
         ['SUMMARY'],
         ['Total Conversions', statusConversionData.totalConversions],
@@ -1492,7 +1670,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>🔄 STATUS CONVERSION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1658,7 +1836,7 @@ export const DWSReportTab: React.FC = () => {
           <body>
             <div class="header">
               <h1>⭐ CONTRIBUTION REPORT</h1>
-              <div style="font-size: 10px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+              <div style="font-size: 10px; color: #666;">Generated on ${formatDateTimeDDMMYYYY(new Date())}</div>
             </div>
             
             <div class="summary-box">
@@ -1761,6 +1939,78 @@ export const DWSReportTab: React.FC = () => {
   };
 
   // Generate Workload Distribution Report
+  const handleGenerateTomorrowActivities = async () => {
+    try {
+      const entries = await dailyWorkStatusService.getAllEntries();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      
+      const tomorrowEnd = new Date(tomorrow);
+      tomorrowEnd.setHours(23, 59, 59, 999);
+      
+      // Section 1: Activities starting tomorrow
+      const startingTomorrow = entries.filter(entry => {
+        if (!entry.startDate) return false;
+        const startDate = new Date(entry.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate.getTime() === tomorrow.getTime();
+      });
+      
+      // Section 2: Ongoing activities
+      const ongoingActivities = entries.filter(entry => {
+        return entry.finalStatus === 'Ongoing';
+      });
+      
+      // Create special report data structure
+      const tomorrowData = {
+        reportDate: formatDateDDMMYYYY(tomorrow),
+        startingTomorrow: startingTomorrow.map(entry => ({
+          ...entry,
+          startDateFormatted: entry.startDate ? formatDateDDMMYYYY(new Date(entry.startDate)) : '',
+          targetDateFormatted: entry.targetDate ? formatDateDDMMYYYY(new Date(entry.targetDate)) : '',
+          priority: entry.targetDate ? 
+            (new Date(entry.targetDate) < new Date() ? 'High' : 'Normal') : 
+            'Normal'
+        })),
+        ongoingActivities: ongoingActivities.map(entry => {
+          const daysSinceStart = entry.startDate ? 
+            Math.floor((Date.now() - new Date(entry.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 
+            0;
+          const daysUntilTarget = entry.targetDate ? 
+            Math.floor((new Date(entry.targetDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 
+            null;
+          
+          return {
+            ...entry,
+            startDateFormatted: entry.startDate ? formatDateDDMMYYYY(new Date(entry.startDate)) : '',
+            targetDateFormatted: entry.targetDate ? formatDateDDMMYYYY(new Date(entry.targetDate)) : '',
+            daysSinceStart,
+            daysUntilTarget,
+            urgency: daysUntilTarget !== null && daysUntilTarget < 3 ? 'Urgent' : 'Normal'
+          };
+        }),
+        summary: {
+          totalStarting: startingTomorrow.length,
+          totalOngoing: ongoingActivities.length,
+          totalActivities: startingTomorrow.length + ongoingActivities.length
+        }
+      };
+      
+      // Store in a custom state or repurpose existing
+      setReportData(startingTomorrow.concat(ongoingActivities));
+      setWorkloadData({ tomorrowReport: tomorrowData } as any);
+      setDelayAnalysisData(null);
+      setStatusCounts({
+        'Starting Tomorrow': startingTomorrow.length,
+        'Ongoing': ongoingActivities.length
+      });
+      
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to generate tomorrow\'s activities: ' + error.message);
+    }
+  };
+
   const handleGenerateWorkloadDistribution = async () => {
     try {
       const entries = await dailyWorkStatusService.getAllEntries();
@@ -2114,6 +2364,7 @@ export const DWSReportTab: React.FC = () => {
                 { value: 'status', label: 'Status' },
                 { value: 'delay', label: '⚠️ Delay Analysis' },
                 { value: 'workload', label: '👥 Workload Distribution' },
+                { value: 'tomorrow', label: '🌅 Tomorrow\'s Activities' },
                 { value: 'target', label: '🎯 Target Achievement' },
                 { value: 'statusConversion', label: '🔄 Status Conversion' },
                 { value: 'contribution', label: '⭐ Contribution Report' }
@@ -2373,6 +2624,105 @@ export const DWSReportTab: React.FC = () => {
                         {task.daysDiff} days
                       </Text>
                       <Text style={[styles.tableCell, { width: 100 }]}>{task.finalStatus}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+        </View>
+      )}
+      
+      {/* Tomorrow's Activities Display */}
+      {workloadData?.tomorrowReport && (
+        <View style={styles.workloadContainer}>
+          {/* Summary Cards */}
+          <View style={styles.delaySummaryRow}>
+            <View style={[styles.delaySummaryCard, { borderLeftColor: '#007bff' }]}>
+              <Text style={styles.delaySummaryLabel}>🌅 Starting Tomorrow</Text>
+              <Text style={[styles.delaySummaryValue, { color: '#007bff' }]}>
+                {workloadData.tomorrowReport.summary.totalStarting}
+              </Text>
+            </View>
+            <View style={[styles.delaySummaryCard, { borderLeftColor: '#ffc107' }]}>
+              <Text style={styles.delaySummaryLabel}>📝 Ongoing Activities</Text>
+              <Text style={[styles.delaySummaryValue, { color: '#ffc107' }]}>
+                {workloadData.tomorrowReport.summary.totalOngoing}
+              </Text>
+            </View>
+            <View style={[styles.delaySummaryCard, { borderLeftColor: '#6c757d' }]}>
+              <Text style={styles.delaySummaryLabel}>📊 Total Activities</Text>
+              <Text style={[styles.delaySummaryValue, { color: '#6c757d' }]}>
+                {workloadData.tomorrowReport.summary.totalActivities}
+              </Text>
+            </View>
+          </View>
+          
+          {/* Starting Tomorrow Section */}
+          {workloadData.tomorrowReport.startingTomorrow.length > 0 && (
+            <View style={styles.delaySection}>
+              <Text style={[styles.delaySectionTitle, { backgroundColor: '#007bff' }]}>
+                🌅 STARTING TOMORROW ({workloadData.tomorrowReport.startingTomorrow.length})
+              </Text>
+              <ScrollView horizontal>
+                <View>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.headerCell, { width: 150 }]}>Project</Text>
+                    <Text style={[styles.headerCell, { width: 250 }]}>Activity</Text>
+                    <Text style={[styles.headerCell, { width: 120 }]}>Assigned To</Text>
+                    <Text style={[styles.headerCell, { width: 100 }]}>Start Date</Text>
+                    <Text style={[styles.headerCell, { width: 100 }]}>Target Date</Text>
+                    <Text style={[styles.headerCell, { width: 80 }]}>Priority</Text>
+                    <Text style={[styles.headerCell, { width: 80 }]}>Hours</Text>
+                  </View>
+                  {workloadData.tomorrowReport.startingTomorrow.map((task, idx) => (
+                    <View key={task.id || idx} style={styles.tableRow}>
+                      <Text style={[styles.tableCell, { width: 150 }]}>{task.projectName}</Text>
+                      <Text style={[styles.tableCell, { width: 250 }]} numberOfLines={2}>{task.mainActivity}</Text>
+                      <Text style={[styles.tableCell, { width: 120 }]}>{task.assignedTo}</Text>
+                      <Text style={[styles.tableCell, { width: 100 }]}>{task.startDateFormatted}</Text>
+                      <Text style={[styles.tableCell, { width: 100 }]}>{task.targetDateFormatted}</Text>
+                      <Text style={[styles.tableCell, { width: 80, textAlign: 'center', fontWeight: 'bold', color: task.priority === 'High' ? '#dc3545' : task.priority === 'Medium' ? '#ffc107' : '#28a745' }]}>
+                        {task.priority}
+                      </Text>
+                      <Text style={[styles.tableCell, { width: 80, textAlign: 'center' }]}>{task.hours}h</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+          
+          {/* Ongoing Activities Section */}
+          {workloadData.tomorrowReport.ongoingActivities.length > 0 && (
+            <View style={styles.delaySection}>
+              <Text style={[styles.delaySectionTitle, { backgroundColor: '#ffc107', color: '#000' }]}>
+                📝 ONGOING ACTIVITIES ({workloadData.tomorrowReport.ongoingActivities.length})
+              </Text>
+              <ScrollView horizontal>
+                <View>
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.headerCell, { width: 150 }]}>Project</Text>
+                    <Text style={[styles.headerCell, { width: 250 }]}>Activity</Text>
+                    <Text style={[styles.headerCell, { width: 120 }]}>Assigned To</Text>
+                    <Text style={[styles.headerCell, { width: 100 }]}>Start Date</Text>
+                    <Text style={[styles.headerCell, { width: 100 }]}>Target Date</Text>
+                    <Text style={[styles.headerCell, { width: 80 }]}>Urgency</Text>
+                    <Text style={[styles.headerCell, { width: 200 }]}>Last Update</Text>
+                  </View>
+                  {workloadData.tomorrowReport.ongoingActivities.map((task, idx) => (
+                    <View key={task.id || idx} style={styles.tableRow}>
+                      <Text style={[styles.tableCell, { width: 150 }]}>{task.projectName}</Text>
+                      <Text style={[styles.tableCell, { width: 250 }]} numberOfLines={2}>{task.mainActivity}</Text>
+                      <Text style={[styles.tableCell, { width: 120 }]}>{task.assignedTo}</Text>
+                      <Text style={[styles.tableCell, { width: 100 }]}>{task.startDateFormatted}</Text>
+                      <Text style={[styles.tableCell, { width: 100 }]}>{task.targetDateFormatted}</Text>
+                      <Text style={[styles.tableCell, { width: 80, textAlign: 'center', fontWeight: 'bold', color: task.urgency === 'Critical' ? '#dc3545' : task.urgency === 'High' ? '#ff6b6b' : task.urgency === 'Medium' ? '#ffc107' : '#28a745' }]}>
+                        {task.urgency}
+                      </Text>
+                      <Text style={[styles.tableCell, { width: 200 }]} numberOfLines={2}>
+                        {task.statusUpdates?.[task.statusUpdates.length - 1]?.note || 'No updates'}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -2771,7 +3121,7 @@ export const DWSReportTab: React.FC = () => {
         </View>
       )}
       
-      {!delayAnalysisData && !workloadData && !targetAchievementData && !statusConversionData && !contributionData && reportData.length === 0 && (
+      {!delayAnalysisData && !workloadData && !workloadData?.tomorrowReport && !targetAchievementData && !statusConversionData && !contributionData && reportData.length === 0 && (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No data. Click "Generate Report" to load data.</Text>
         </View>
