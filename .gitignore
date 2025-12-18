@@ -11,11 +11,11 @@ npm-debug.*
 *.orig.*
 
 # Dependencies
+
 node_modules/
 .pnp
 .pnp.js
 yarn.lock
-package-lock.json
 
 # IDEs
 .vscode/
