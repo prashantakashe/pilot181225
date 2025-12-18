@@ -31,7 +31,7 @@
       "bundler": "metro",
       "build": {
         "devtool": false,
-        "publicPath": "./"
+        "publicPath": ""
       }
     },
     "scheme": "myapp",
