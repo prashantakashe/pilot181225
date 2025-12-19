@@ -1,23 +1,20 @@
 // src/screens/EscalationBillScreen.tsx
-import React, { useContext, useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   ActivityIndicator,
-  Alert 
+  Alert,
 } from 'react-native';
-import { AuthContext } from '../contexts/AuthContext';
 import { AppLayout } from '../components/AppLayout';
-import { ENGINEERING_NAV } from '../constants/sidebarMenus';
 import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
-import type { EscalationMaster } from '../types/escalation';
+import type { EscalationMaster, EscalationProject } from '../types/escalation';
 import { getAllMasters } from '../services/escalationService';
 
-// Tab imports (to be created)
+// Tabs
 import MasterSetupTab from '../components/escalation/MasterSetupTab';
 import IndicesGraphsTab from '../components/escalation/IndicesGraphsTab';
 import CreateBillTab from '../components/escalation/CreateBillTab';
@@ -25,7 +22,13 @@ import CalculationTab from '../components/escalation/CalculationTab';
 import DocumentsTab from '../components/escalation/DocumentsTab';
 import HistoryTab from '../components/escalation/HistoryTab';
 
-type TabType = 'master' | 'indices' | 'create' | 'calculation' | 'documents' | 'history';
+type TabType =
+  | 'master'
+  | 'indices'
+  | 'create'
+  | 'calculation'
+  | 'documents'
+  | 'history';
 
 interface Tab {
   id: TabType;
@@ -42,69 +45,37 @@ const TABS: Tab[] = [
   { id: 'history', label: 'History', icon: '📜' },
 ];
 
-interface EscalationBillScreenProps {
+interface Props {
   navigation: any;
 }
 
-const EscalationBillScreen: React.FC<EscalationBillScreenProps> = ({ navigation }) => {
+const EscalationBillScreen: React.FC<Props> = () => {
   const [activeTab, setActiveTab] = useState<TabType>('master');
   const [masters, setMasters] = useState<EscalationMaster[]>([]);
-  const [selectedMaster, setSelectedMaster] = useState<EscalationMaster | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedMaster, setSelectedMaster] =
+    useState<EscalationMaster | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedProject, setSelectedProject] =
+    useState<EscalationProject | null>(null);
 
   useEffect(() => {
     loadMasters();
   }, []);
 
-  // Debug: Monitor selectedMaster changes
-  useEffect(() => {
-    console.log('[EscalationBillScreen] selectedMaster changed:', selectedMaster ? `${selectedMaster.contractName} (ID: ${selectedMaster.id})` : 'null');
-    console.log('[EscalationBillScreen] Indices & Graphs should be accessible:', !!selectedMaster);
-  }, [selectedMaster]);
-
   const loadMasters = async () => {
     try {
       setLoading(true);
-      console.log('[EscalationBillScreen] Loading masters from Firestore...');
       const data = await getAllMasters();
-      console.log('[EscalationBillScreen] Loaded', data.length, 'masters:', data);
       setMasters(data);
-      
-      // Auto-select first master if available and no master currently selected
+
       if (data.length > 0 && !selectedMaster) {
-        console.log('[EscalationBillScreen] Auto-selecting first master:', data[0].contractName);
         setSelectedMaster(data[0]);
       }
-    } catch (error: any) {
-      console.error('[EscalationBillScreen] Error loading masters:', error);
+    } catch (error) {
       Alert.alert('Error', 'Failed to load master data');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMasterCreated = async (master: EscalationMaster) => {
-    console.log('[EscalationBillScreen] handleMasterCreated called with:', master);
-    
-    // Reload the entire masters list from Firestore to get the saved data with proper ID
-    await loadMasters();
-    
-    // Set the newly created master as selected
-    setSelectedMaster(master);
-    
-    Alert.alert('✅ Success', 'Master data saved successfully! You can now access Indices & Graphs.');
-  };
-
-  const handleMasterUpdated = async (master: EscalationMaster) => {
-    console.log('[EscalationBillScreen] handleMasterUpdated called with:', master);
-    
-    // Reload the entire masters list from Firestore
-    await loadMasters();
-    
-    // Update the selected master
-    setSelectedMaster(master);
-    
-    Alert.alert('✅ Success', 'Master data updated successfully!');
   };
 
   const renderTabContent = () => {
@@ -124,110 +95,59 @@ const EscalationBillScreen: React.FC<EscalationBillScreenProps> = ({ navigation 
             masters={masters}
             selectedMaster={selectedMaster}
             onMasterSelect={setSelectedMaster}
-            onMasterCreated={handleMasterCreated}
-            onMasterUpdated={handleMasterUpdated}
+            onMasterCreated={loadMasters}
+            onMasterUpdated={loadMasters}
+            projectId={selectedProject?.id || ''}
           />
         );
+
       case 'indices':
-        return (
-          <IndicesGraphsTab
-            masterId={selectedMaster?.id}
-          />
-        );
+        return <IndicesGraphsTab masterId={selectedMaster?.id} />;
+
       case 'create':
-        return (
-          <CreateBillTab
-            master={selectedMaster}
-            onBillCreated={() => setActiveTab('history')}
-          />
-        );
+        return <CreateBillTab master={selectedMaster} />;
+
       case 'calculation':
-        return (
-          <CalculationTab
-            master={selectedMaster}
-          />
-        );
+        return <CalculationTab master={selectedMaster} />;
+
       case 'documents':
-        return (
-          <DocumentsTab
-            masterId={selectedMaster?.id}
-          />
-        );
+        return <DocumentsTab master={selectedMaster} />;
+
       case 'history':
-        return (
-          <HistoryTab
-            masterId={selectedMaster?.id}
-            onBillSelect={(bill) => {
-              // Navigate to calculation view
-              setActiveTab('calculation');
-            }}
-          />
-        );
+        return <HistoryTab master={selectedMaster} />;
+
       default:
         return null;
     }
   };
 
   return (
-    <AppLayout 
-      title="Escalation Bill" 
-      activeRoute="EscalationBill" 
-      sidebarItems={ENGINEERING_NAV}
-      showBackButton={true}
-      onBackPress={() => navigation.navigate('Engineering')}
-    >
+    <AppLayout>
       <View style={styles.container}>
-        {/* Tab Header */}
         <View style={styles.tabHeader}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabsContainer}
-          >
-            {TABS.map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                style={[
-                  styles.tab,
-                  activeTab === tab.id && styles.activeTab,
-                ]}
-                onPress={() => setActiveTab(tab.id)}
-              >
-                <Text style={styles.tabIcon}>{tab.icon}</Text>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeTab === tab.id && styles.activeTabLabel,
-                  ]}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {TABS.map(tab => {
+              const active = tab.id === activeTab;
+
+              return (
+                <TouchableOpacity
+                  key={tab.id}
+                  style={[styles.tab, active && styles.activeTab]}
+                  onPress={() => setActiveTab(tab.id)}
                 >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={styles.tabIcon}>{tab.icon}</Text>
+                  <Text
+                    style={[styles.tabLabel, active && styles.activeTabLabel]}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
-        {/* Tab Content */}
-        <View style={styles.tabContent}>
-          {!selectedMaster && activeTab !== 'master' ? (
-            <View style={styles.noMasterContainer}>
-              <Text style={styles.noMasterIcon}>⚠️</Text>
-              <Text style={styles.noMasterText}>
-                Please create or select a Master Setup first
-              </Text>
-              <TouchableOpacity
-                style={styles.goToMasterButton}
-                onPress={() => setActiveTab('master')}
-              >
-                <Text style={styles.goToMasterButtonText}>
-                  Go to Master Setup
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            renderTabContent()
-          )}
-        </View>
+        <View style={styles.tabContent}>{renderTabContent()}</View>
       </View>
     </AppLayout>
   );
@@ -242,22 +162,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  tabsContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 12,
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    marginHorizontal: 4,
+    margin: 6,
     borderRadius: 8,
     backgroundColor: '#f5f5f5',
   },
@@ -270,7 +181,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#666',
   },
   activeTabLabel: {
@@ -284,39 +194,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
     color: '#666',
-  },
-  noMasterContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  noMasterIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  noMasterText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  goToMasterButton: {
-    backgroundColor: colors.ACTION_BLUE,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  goToMasterButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
 

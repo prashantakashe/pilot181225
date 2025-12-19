@@ -1,3 +1,10 @@
+// Project card for Escalation Bill module
+export interface EscalationProject {
+  id: string; // Firestore document ID
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 // src/types/escalation.ts
 
 export type EscalationFormula = 

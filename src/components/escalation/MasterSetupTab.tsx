@@ -24,6 +24,11 @@ interface MasterSetupTabProps {
   onMasterSelect: (master: EscalationMaster) => void;
   onMasterCreated: (master: EscalationMaster) => void;
   onMasterUpdated: (master: EscalationMaster) => void;
+  /**
+   * Project identifier for the escalation master.
+   * Optional so the component can still function in legacy flows.
+   */
+  projectId?: string;
 }
 
 const FORMULA_OPTIONS: { label: string; value: EscalationFormula }[] = [
@@ -112,6 +117,7 @@ const MasterSetupTab: React.FC<MasterSetupTabProps> = ({
   onMasterSelect,
   onMasterCreated,
   onMasterUpdated,
+  projectId,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -294,10 +300,13 @@ const MasterSetupTab: React.FC<MasterSetupTabProps> = ({
       setSaving(true);
       console.log('[MasterSetupTab] Starting save operation...');
 
+      const effectiveProjectId =
+        selectedMaster?.projectId ?? projectId ?? '';
+
       const masterData: Omit<
         EscalationMaster,
         'id' | 'createdAt' | 'updatedAt' | 'createdBy'
-      > = {
+      > & { projectId: string } = {
         contractName: contractName.trim(),
         agreementNo: agreementNo.trim(),
         workOrderNo: workOrderNo.trim(),
@@ -316,6 +325,7 @@ const MasterSetupTab: React.FC<MasterSetupTabProps> = ({
           steel: parseFloat(steelWeightage) || 0,
         },
         uploadedFiles: selectedMaster?.uploadedFiles || [],
+        projectId: effectiveProjectId,
       };
 
       console.log('[MasterSetupTab] Master data to save:', masterData);

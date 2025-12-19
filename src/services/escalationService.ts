@@ -1,3 +1,43 @@
+// ============ Escalation Project CRUD ============
+import type { EscalationProject } from '../types/escalation';
+
+const PROJECTS_COLLECTION = 'escalation_projects';
+
+export const getEscalationProjects = async (): Promise<EscalationProject[]> => {
+  const q = query(collection(db, PROJECTS_COLLECTION), orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+    createdAt: docSnap.data().createdAt?.toDate?.() || new Date(),
+    updatedAt: docSnap.data().updatedAt?.toDate?.() || new Date(),
+  }) as EscalationProject);
+};
+
+export const createEscalationProject = async (data: { name: string }): Promise<string> => {
+  const userId = auth.currentUser?.uid || '';
+  const now = Timestamp.now();
+  const docRef = await addDoc(collection(db, PROJECTS_COLLECTION), {
+    name: data.name,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: userId,
+  });
+  return docRef.id;
+};
+
+export const updateEscalationProject = async (id: string, data: { name: string }): Promise<void> => {
+  const docRef = doc(db, PROJECTS_COLLECTION, id);
+  await updateDoc(docRef, {
+    name: data.name,
+    updatedAt: Timestamp.now(),
+  });
+};
+
+export const deleteEscalationProject = async (id: string): Promise<void> => {
+  const docRef = doc(db, PROJECTS_COLLECTION, id);
+  await deleteDoc(docRef);
+};
 // src/services/escalationService.ts
 import { 
   collection, 
